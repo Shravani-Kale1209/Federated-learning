@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{HOSPITAL_NAME}} Local Control</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #020617, #0f172a);
+            color: white; margin: 0; padding: 3rem 1rem; display: flex; flex-direction: column; align-items: center;
+        }
+        .header { text-align: center; margin-bottom: 3rem; }
+        .header h1 {
+            font-size: 3.5rem; margin-bottom: 0.5rem;
+            background: -webkit-linear-gradient(#38bdf8, #818cf8);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+            width: 100%;
+            max-width: 700px;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03); 
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px; 
+            padding: 2.5rem; 
+            box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.4); 
+            text-align: center;
+            backdrop-filter: blur(12px);
+        }
+
+        .panel-title {
+            font-size: 1.5rem; font-weight: 600; margin-top: 0; margin-bottom: 0.5rem;
+        }
+
+        .panel-subtext {
+            color: #94a3b8; font-size: 0.95rem; margin-bottom: 2rem; line-height: 1.5;
+        }
+
+        .upload-area {
+            border: 2px dashed rgba(56, 189, 248, 0.4); border-radius: 16px;
+            padding: 3rem 2rem; text-align: center; cursor: pointer; transition: all 0.3s ease;
+            background: rgba(56, 189, 248, 0.03); display: block; margin-bottom: 2rem;
+        }
+        
+        .upload-area:hover { 
+            background: rgba(56, 189, 248, 0.08); 
+            border-color: #38bdf8; 
+            transform: translateY(-2px);
+        }
+        
+        /* Hide all raw file inputs securely */
+        input[type="file"] { display: none; }
+        
+        .status-box {
+            background: rgba(0, 0, 0, 0.5); padding: 1.2rem; border-radius: 12px;
+            color: #38bdf8; font-weight: 600; font-family: 'Consolas', monospace; font-size: 1rem;
+            text-align: left; border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .badge { 
+            background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981;
+            padding: 6px 14px; border-radius: 30px; font-size: 0.85rem; font-weight: 700;
+            display: inline-block; margin-top: 10px;
+        }
+
+        /* Prediction layout */
+        .prediction-result {
+            margin-top: 2rem; padding: 2rem; background: rgba(0, 0, 0, 0.4); 
+            border-radius: 16px; display: none; border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+        .prediction-result.active { display: block; animation: fadeIn 0.4s ease; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .prob-bar-container { display: flex; align-items: center; margin-bottom: 0.8rem; }
+        .prob-label { width: 120px; text-align: left; color: #cbd5e1; font-weight: 600; font-size: 0.9rem; letter-spacing: 0.5px;}
+        .prob-bar-wrapper { flex-grow: 1; background: rgba(255, 255, 255, 0.05); border-radius: 6px; height: 12px; overflow: hidden; margin: 0 1rem; }
+        .prob-fill { height: 100%; background: linear-gradient(90deg, #38bdf8, #818cf8); border-radius: 6px;}
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{HOSPITAL_NAME}}</h1>
+        <p>Private Distributed Node <span class="badge">HIPAA SECURE</span></p>
+    </div>
+    
+    <div class="container">
+        <!-- TRAINING PANEL -->
+        <div class="glass-panel">
+            <h2 class="panel-title">Initiate Distributed Training</h2>
+            <p class="panel-subtext">
+                Upload your internal hospital's <b>.zip</b> database of MRI classes securely. Data never exits this machine. Only the derived mathematical coefficients are transmitted to the Global Server.
+            </p>
+            
+            <label class="upload-area" id="uploadDropZone">
+                <input type="file" id="zipInput" accept=".zip">
+                <div id="uploadText">
+                    <span style="font-size: 3rem; display: block; margin-bottom: 1rem;">🗂️</span>
+                    <span style="font-size: 1.1rem; font-weight: 600;">Select Patient Database (.zip)</span>
+                </div>
+            </label>
+
+            <div style="text-align: left; margin-bottom: 0.6rem; color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Live Event Terminal</div>
+            <div class="status-box" id="statusLog">> System Idle. Awaiting payload.</div>
+        </div>
+
+        <!-- PREDICTION PANEL -->
+        <div class="glass-panel" id="predictPanel">
+            <h2 class="panel-title">Test Local Diagnostics</h2>
+            <p class="panel-subtext">Evaluate this node's isolated intelligence right now using a single diagnostic image.</p>
+            
+            <label class="upload-area" style="padding: 2rem;">
+                <input type="file" id="imageInput" accept="image/jpeg, image/png">
+                <div id="uploadImageText">
+                    <span style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem;">🔬</span>
+                    <span style="font-size: 1rem; font-weight: 600; color: #38bdf8;">Upload MRI Image (.jpg)</span>
+                </div>
+            </label>
+            
+            <div class="prediction-result" id="predResult">
+                <div id="topPrediction" style="font-size: 2rem; font-weight: 700; color: #10b981; margin-bottom: 1.5rem;"></div>
+                <div id="probBars"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const zipInput = document.getElementById('zipInput');
+        const statusLog = document.getElementById('statusLog');
+        
+        // Poll status every 1.5s
+        setInterval(async () => {
+            try {
+                const res = await fetch('/api/status');
+                const data = await res.json();
+                statusLog.innerText = "> " + data.status;
+                if (data.status.includes("Complete")) {
+                    statusLog.style.color = "#10b981"; 
+                } else if (data.status.includes("Error")) {
+                    statusLog.style.color = "#f43f5e";
+                } else {
+                    statusLog.style.color = "#38bdf8";
+                }
+            } catch(e) {}
+        }, 1500);
+
+        // Uploading Zip
+        zipInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            statusLog.innerText = "> Encrypting payload context...";
+            statusLog.style.color = "#38bdf8";
+            
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!res.ok) throw new Error("Upload completely failed from server side.");
+                const data = await res.json();
+                if (data.error) {
+                    statusLog.innerText = "> Error: " + data.error;
+                    statusLog.style.color = "#f43f5e";
+                }
+            } catch (err) {
+                statusLog.innerText = "> Network exception during upload protocols.";
+                statusLog.style.color = "#f43f5e";
+            }
+            zipInput.value = "";
+        });
+
+        // Image Prediction Logic
+        document.getElementById('imageInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const resPanel = document.getElementById('predResult');
+            resPanel.classList.add('active');
+            
+            document.getElementById('topPrediction').innerHTML = "<span style='color:#38bdf8; animation: pulse 1.5s infinite;'>Analyzing Neural Networks...</span>";
+            document.getElementById('probBars').innerHTML = "";
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await fetch('/api/predict', { method: 'POST', body: formData });
+                if (!res.ok) {
+                    const txt = await res.text();
+                    throw new Error(`System crash via ${res.status}: ${txt}`);
+                }
+                const data = await res.json();
+                if (data.error) throw new Error(data.error);
+
+                document.getElementById('topPrediction').innerHTML = `${data.predicted} <span style="font-size:1.2rem; color:#94a3b8; margin-left: 10px;">(${(data.confidence * 100).toFixed(1)}%)</span>`;
+                
+                let barsHtml = "";
+                for (const [cls, prob] of Object.entries(data.probabilities)) {
+                    const percent = (prob * 100).toFixed(1);
+                    barsHtml += `
+                        <div class="prob-bar-container">
+                            <div class="prob-label">${cls.toUpperCase()}</div>
+                            <div class="prob-bar-wrapper">
+                                <div class="prob-fill" style="width: ${percent}%;"></div>
+                            </div>
+                            <div style="width:50px; text-align:right; font-size:0.85rem; color:#94a3b8; font-weight:600;">${percent}%</div>
+                        </div>
+                    `;
+                }
+                document.getElementById('probBars').innerHTML = barsHtml;
+            } catch (err) {
+                document.getElementById('topPrediction').innerHTML = `<span style="color:#f43f5e; font-size:1.2rem;">✖ ${err.message}</span>`;
+            }
+            e.target.value = "";
+        });
+    </script>
+</body>
+</html>

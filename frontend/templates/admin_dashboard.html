@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Model Admin Supervisor</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif; background: #0f172a; color: white;
+            margin: 0; padding: 3rem 1rem; display: flex; flex-direction: column; align-items: center;
+        }
+        .header { text-align: center; margin-bottom: 3rem; }
+        .header h1 {
+            font-size: 3.5rem; margin-bottom: 0.5rem;
+            background: -webkit-linear-gradient(#f43f5e, #f59e0b);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+            width: 100%;
+            max-width: 700px;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03); 
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px; 
+            padding: 2.5rem; 
+            box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.4); 
+            text-align: center;
+            backdrop-filter: blur(12px);
+        }
+
+        .panel-title {
+            font-size: 1.5rem; font-weight: 600; margin-top: 0; margin-bottom: 0.5rem;
+        }
+
+        .panel-subtext {
+            color: #94a3b8; font-size: 0.95rem; margin-bottom: 2rem; line-height: 1.5;
+        }
+
+        .stat-value { font-size: 4.5rem; font-weight: 700; color: #f43f5e; margin: 1rem 0; line-height: 1; }
+        .stat-label { color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        
+        .progress-bar-bg { width: 100%; background: rgba(0,0,0,0.4); height: 14px; border-radius: 7px; overflow: hidden; margin-top: 1rem; border: 1px solid rgba(255, 255, 255, 0.05); }
+        .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #f43f5e, #f59e0b); width: 0%; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        .alert { margin-top: 2rem; padding: 1.2rem; border-radius: 12px; background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.4); color: #fda4af; font-size: 0.95rem; line-height: 1.5; text-align: left; }
+
+        .upload-area {
+            border: 2px dashed rgba(245, 158, 11, 0.4); border-radius: 16px;
+            padding: 3rem 2rem; text-align: center; cursor: pointer; transition: all 0.3s ease;
+            background: rgba(245, 158, 11, 0.03); display: block;
+        }
+        
+        .upload-area:hover { 
+            background: rgba(245, 158, 11, 0.08); 
+            border-color: #f59e0b; 
+            transform: translateY(-2px);
+        }
+        
+        /* Hide all raw file inputs securely */
+        input[type="file"] { display: none; }
+
+        /* Prediction layout */
+        .prediction-result {
+            margin-top: 2rem; padding: 2rem; background: rgba(0, 0, 0, 0.4); 
+            border-radius: 16px; display: none; border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+        .prediction-result.active { display: block; animation: fadeIn 0.4s ease; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .prob-bar-container { display: flex; align-items: center; margin-bottom: 0.8rem; }
+        .prob-label { width: 120px; text-align: left; color: #cbd5e1; font-weight: 600; font-size: 0.9rem; letter-spacing: 0.5px;}
+        .prob-bar-wrapper { flex-grow: 1; background: rgba(255, 255, 255, 0.05); border-radius: 6px; height: 12px; overflow: hidden; margin: 0 1rem; }
+        .prob-fill { height: 100%; background: linear-gradient(90deg, #f43f5e, #f59e0b); border-radius: 6px;}
+        
+        .input-text { padding:14px; width:80%; box-sizing: border-box; border-radius:10px; border:1px solid rgba(255,255,255,0.1); margin-bottom:1.5rem; background: rgba(0,0,0,0.3); color: white; font-size: 1rem; font-family: 'Inter'; text-align: center; outline: none; }
+        .input-text:focus { border-color: #f43f5e; box-shadow: 0 0 10px rgba(244, 63, 94, 0.2); }
+        .btn { padding:14px 40px; background: linear-gradient(45deg, #f43f5e, #f59e0b); color:white; border:none; border-radius:10px; cursor:pointer; font-size: 1rem; font-weight: 700; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(244, 63, 94, 0.3); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(244, 63, 94, 0.4); }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Global Supervisor Admin</h1>
+        <p style="color: #94a3b8; letter-spacing: 1px; font-weight: 600;">FEDERATED NETWORK OVERSEER</p>
+    </div>
+    
+    <div class="container">
+        <!-- LOGIN PANEL -->
+        <div class="glass-panel" id="loginPanel">
+            <h2 class="panel-title">Authentication Required</h2>
+            <p class="panel-subtext">Enter supervisor override key to access network metrics.</p>
+            <input type="password" id="adminPass" class="input-text" placeholder="Enter Supervisor Password (admin)">
+            <br>
+            <button class="btn" onclick="login()">Authenticate</button>
+            <div id="loginErr" style="color:#ef4444; margin-top:20px; display:none; font-weight: 600;">✖ Invalid credentials</div>
+        </div>
+        
+        <!-- MAIN TRACKING PANEL -->
+        <div id="supervisorPanel" style="display:none;">
+            <div class="glass-panel" style="margin-bottom: 2.5rem;">
+                <h2 class="panel-title">Live Network Sync</h2>
+                <div style="margin: 2.5rem 0;">
+                    <div class="stat-label">Federated Round</div>
+                    <div class="stat-value" id="roundNum">1</div>
+                </div>
+                
+                <div class="stat-label" id="statusLabel" style="margin-bottom: 0.5rem; text-align: left;">Awaiting 2 Hospital nodes...</div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progressBar"></div>
+                </div>
+                
+                <div class="alert">
+                    <b style="color: #f43f5e;">SYSTEM NOTICE:</b> Await decentralized hospitals to upload compressed weight matrices. The mathematical FedAvg happens securely behind the scenes without ever receiving raw patient data.
+                </div>
+            </div>
+
+            <!-- PREDICTION PANEL -->
+            <div class="glass-panel" id="predictPanel">
+                <h2 class="panel-title">Evaluate Generalized AI</h2>
+                <p class="panel-subtext">Verify the active Federated Global Model. Upload an MRI to see how intelligent the globally merged algorithms are across all nodes.</p>
+                
+                <label class="upload-area" style="padding: 2rem;">
+                    <input type="file" id="imageInput" accept="image/jpeg, image/png">
+                    <div id="uploadImageText">
+                        <span style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem;">🧠</span>
+                        <span style="font-size: 1rem; font-weight: 600; color: #f59e0b;">Analyze Diagnostic Image (.jpg)</span>
+                    </div>
+                </label>
+                
+                <div class="prediction-result" id="predResult">
+                    <div id="topPrediction" style="font-size: 2rem; font-weight: 700; color: #10b981; margin-bottom: 1.5rem;"></div>
+                    <div id="probBars"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function login() {
+            if(document.getElementById('adminPass').value === "admin") {
+                document.getElementById('loginPanel').style.display = "none";
+                document.getElementById('supervisorPanel').style.display = "block";
+                startPolling();
+            } else {
+                document.getElementById('loginErr').style.display = "block";
+            }
+        }
+        
+        async function startPolling() {
+            setInterval(async () => {
+                try {
+                    const res = await fetch('/api/admin_stats');
+                    const data = await res.json();
+                    document.getElementById('roundNum').innerText = data.round_num;
+                    const percent = (data.clients_received / data.max_clients) * 100;
+                    document.getElementById('progressBar').style.width = percent + '%';
+                    
+                    if (data.clients_received === data.max_clients) {
+                        document.getElementById('statusLabel').innerText = "Running FedAvg Architecture...";
+                    } else if (data.clients_received > 0) {
+                        document.getElementById('statusLabel').innerText = `Syncing (${data.clients_received}/${data.max_clients})...`;
+                    } else {
+                        document.getElementById('statusLabel').innerText = "Awaiting securely trained hospital payloads...";
+                    }
+                } catch (e) {}
+            }, 2000);
+        }
+
+        // Image Prediction Logic
+        document.getElementById('imageInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const resPanel = document.getElementById('predResult');
+            resPanel.classList.add('active');
+            
+            document.getElementById('topPrediction').innerHTML = "<span style='color:#f59e0b; animation: pulse 1.5s infinite;'>Solving Neural Network...</span>";
+            document.getElementById('probBars').innerHTML = "";
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await fetch('/api/predict', { method: 'POST', body: formData });
+                if (!res.ok) {
+                    const txt = await res.text();
+                    throw new Error(`System crash via ${res.status}: ${txt}`);
+                }
+                const data = await res.json();
+                if (data.error) throw new Error(data.error);
+
+                document.getElementById('topPrediction').innerHTML = `${data.predicted} <span style="font-size:1.2rem; color:#94a3b8; margin-left: 10px;">(${(data.confidence * 100).toFixed(1)}%)</span>`;
+                
+                let barsHtml = "";
+                for (const [cls, prob] of Object.entries(data.probabilities)) {
+                    const percent = (prob * 100).toFixed(1);
+                    barsHtml += `
+                        <div class="prob-bar-container">
+                            <div class="prob-label">${cls.toUpperCase()}</div>
+                            <div class="prob-bar-wrapper">
+                                <div class="prob-fill" style="width: ${percent}%;"></div>
+                            </div>
+                            <div style="width:50px; text-align:right; font-size:0.85rem; color:#94a3b8; font-weight:600;">${percent}%</div>
+                        </div>
+                    `;
+                }
+                document.getElementById('probBars').innerHTML = barsHtml;
+            } catch (err) {
+                document.getElementById('topPrediction').innerHTML = `<span style="color:#f43f5e; font-size:1.2rem;">✖ ${err.message}</span>`;
+            }
+            e.target.value = "";
+        });
+    </script>
+</body>
+</html>
