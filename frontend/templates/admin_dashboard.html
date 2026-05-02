@@ -6,222 +6,652 @@
     <title>Global Model Admin Supervisor</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif; background: #0f172a; color: white;
-            margin: 0; padding: 3rem 1rem; display: flex; flex-direction: column; align-items: center;
+        :root {
+            --primary-deep: #2C3947;
+            --primary-cool: #547A95;
+            --primary-mint: #A8B2C1;
+            --primary-cream: #E8EDF2;
         }
-        .header { text-align: center; margin-bottom: 3rem; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--primary-cream);
+            color: var(--primary-deep);
+            margin: 0;
+            padding: 2rem 1rem 3rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            text-align: center;
+            margin-top: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
         .header h1 {
-            font-size: 3.5rem; margin-bottom: 0.5rem;
-            background: -webkit-linear-gradient(#f43f5e, #f59e0b);
+            font-size: 2.7rem;
+            margin-bottom: 0.4rem;
+            background: var(--primary-deep);
+            background-clip: text;
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-        
+
         .container {
             display: flex;
             flex-direction: column;
-            gap: 2.5rem;
+            gap: 1.25rem;
             width: 100%;
-            max-width: 700px;
+            max-width: 1140px;
         }
 
         .glass-panel {
-            background: rgba(255, 255, 255, 0.03); 
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 20px; 
-            padding: 2.5rem; 
-            box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.4); 
-            text-align: center;
+            background: #f4f7fb;
+            border: 1px solid rgba(84, 122, 149, 0.35);
+            border-radius: 18px;
+            padding: 1.4rem;
+            box-shadow: 0 12px 30px rgba(16, 8, 38, 0.38);
             backdrop-filter: blur(12px);
         }
 
         .panel-title {
-            font-size: 1.5rem; font-weight: 600; margin-top: 0; margin-bottom: 0.5rem;
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 0.45rem;
+            color: var(--primary-deep);
         }
 
         .panel-subtext {
-            color: #94a3b8; font-size: 0.95rem; margin-bottom: 2rem; line-height: 1.5;
+            color: rgba(44, 57, 71, 0.86);
+            font-size: 0.92rem;
+            margin-bottom: 1.2rem;
+            line-height: 1.5;
         }
 
-        .stat-value { font-size: 4.5rem; font-weight: 700; color: #f43f5e; margin: 1rem 0; line-height: 1; }
-        .stat-label { color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
-        
-        .progress-bar-bg { width: 100%; background: rgba(0,0,0,0.4); height: 14px; border-radius: 7px; overflow: hidden; margin-top: 1rem; border: 1px solid rgba(255, 255, 255, 0.05); }
-        .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #f43f5e, #f59e0b); width: 0%; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-        
-        .alert { margin-top: 2rem; padding: 1.2rem; border-radius: 12px; background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.4); color: #fda4af; font-size: 0.95rem; line-height: 1.5; text-align: left; }
-
-        .upload-area {
-            border: 2px dashed rgba(245, 158, 11, 0.4); border-radius: 16px;
-            padding: 3rem 2rem; text-align: center; cursor: pointer; transition: all 0.3s ease;
-            background: rgba(245, 158, 11, 0.03); display: block;
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.15rem;
         }
-        
-        .upload-area:hover { 
-            background: rgba(245, 158, 11, 0.08); 
-            border-color: #f59e0b; 
+
+        .training-card { grid-column: span 8; }
+        .contribution-card { grid-column: span 4; }
+        .performance-card { grid-column: span 12; }
+
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(130px, 1fr));
+            gap: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .kpi {
+            border-radius: 12px;
+            border: 1px solid rgba(84, 122, 149, 0.34);
+            background: #ffffff;
+            padding: 0.85rem 0.9rem;
+        }
+
+        .kpi-label {
+            font-size: 0.78rem;
+            color: rgba(44, 57, 71, 0.72);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .kpi-value {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-top: 0.45rem;
+            color: var(--primary-deep);
+        }
+
+        .chart-block {
+            border-radius: 12px;
+            border: 1px solid rgba(84, 122, 149, 0.34);
+            background: #ffffff;
+            padding: 0.9rem;
+        }
+
+        .chart-title {
+            font-size: 0.85rem;
+            color: rgba(44, 57, 71, 0.82);
+            margin-bottom: 0.65rem;
+        }
+
+        .trend-chart {
+            display: flex;
+            gap: 0.45rem;
+            align-items: end;
+            height: 140px;
+        }
+
+        .epoch-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            align-items: center;
+            min-width: 22px;
+        }
+
+        .bar-stack {
+            width: 100%;
+            display: flex;
+            gap: 3px;
+            align-items: end;
+            justify-content: center;
+            height: 110px;
+        }
+
+        .acc-bar, .loss-bar {
+            width: 46%;
+            border-radius: 6px 6px 3px 3px;
+            transition: height 0.45s ease;
+        }
+
+        .acc-bar { background: var(--primary-cool); }
+        .loss-bar { background: var(--primary-mint); }
+
+        .epoch-label {
+            font-size: 0.68rem;
+            color: rgba(44, 57, 71, 0.8);
+        }
+
+        .legend-row {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+            font-size: 0.78rem;
+            color: rgba(44, 57, 71, 0.85);
+        }
+
+        .legend-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .contrib-row {
+            margin-bottom: 0.8rem;
+        }
+
+        .contrib-head {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.83rem;
+            margin-bottom: 0.3rem;
+            color: var(--primary-deep);
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            background: rgba(84, 122, 149, 0.14);
+            height: 10px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(84, 122, 149, 0.28);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--primary-cool);
+            width: 0%;
+            transition: 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .performance-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+            border-radius: 12px;
+            border: 1px solid rgba(84, 122, 149, 0.34);
+            background: #ffffff;
+        }
+
+        th, td {
+            padding: 0.7rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--primary-deep);
+            border-bottom: 1px solid rgba(84, 122, 149, 0.2);
+        }
+
+        th {
+            color: var(--primary-deep);
+            font-weight: 700;
+            background: rgba(84, 122, 149, 0.14);
+        }
+
+        .model-name {
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: inline-block;
+            margin-top: 0.95rem;
+            font-size: 0.8rem;
+            color: var(--primary-deep);
+            background: rgba(194, 165, 109, 0.2);
+            border: 1px solid rgba(194, 165, 109, 0.55);
+            border-radius: 999px;
+            padding: 0.35rem 0.7rem;
+        }
+
+        .roc-wrap {
+            border-radius: 12px;
+            border: 1px solid rgba(84, 122, 149, 0.34);
+            background: #ffffff;
+            padding: 0.7rem;
+        }
+
+        .roc-wrap h4 {
+            margin: 0 0 0.5rem 0;
+            font-size: 0.85rem;
+            color: rgba(44, 57, 71, 0.86);
+        }
+
+        .input-text {
+            padding: 14px;
+            width: 75%;
+            box-sizing: border-box;
+            border-radius: 10px;
+            border: 1px solid rgba(84, 122, 149, 0.34);
+            margin-bottom: 1rem;
+            background: #ffffff;
+            color: var(--primary-deep);
+            font-size: 1rem;
+            font-family: 'Inter';
+            text-align: center;
+            outline: none;
+        }
+
+        .input-text:focus {
+            border-color: var(--primary-deep);
+            box-shadow: 0 0 10px rgba(48, 54, 79, 0.15);
+        }
+
+        .btn {
+            padding: 12px 36px;
+            background: var(--primary-cool);
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 700;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 15px rgba(44, 57, 71, 0.18);
+        }
+
+        .btn:hover {
             transform: translateY(-2px);
         }
-        
-        /* Hide all raw file inputs securely */
-        input[type="file"] { display: none; }
 
-        /* Prediction layout */
-        .prediction-result {
-            margin-top: 2rem; padding: 2rem; background: rgba(0, 0, 0, 0.4); 
-            border-radius: 16px; display: none; border: 1px solid rgba(245, 158, 11, 0.2);
-        }
-        .prediction-result.active { display: block; animation: fadeIn 0.4s ease; }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .error-text {
+            color: #ff8a8a;
+            margin-top: 16px;
+            display: none;
+            font-weight: 600;
         }
 
-        .prob-bar-container { display: flex; align-items: center; margin-bottom: 0.8rem; }
-        .prob-label { width: 120px; text-align: left; color: #cbd5e1; font-weight: 600; font-size: 0.9rem; letter-spacing: 0.5px;}
-        .prob-bar-wrapper { flex-grow: 1; background: rgba(255, 255, 255, 0.05); border-radius: 6px; height: 12px; overflow: hidden; margin: 0 1rem; }
-        .prob-fill { height: 100%; background: linear-gradient(90deg, #f43f5e, #f59e0b); border-radius: 6px;}
-        
-        .input-text { padding:14px; width:80%; box-sizing: border-box; border-radius:10px; border:1px solid rgba(255,255,255,0.1); margin-bottom:1.5rem; background: rgba(0,0,0,0.3); color: white; font-size: 1rem; font-family: 'Inter'; text-align: center; outline: none; }
-        .input-text:focus { border-color: #f43f5e; box-shadow: 0 0 10px rgba(244, 63, 94, 0.2); }
-        .btn { padding:14px 40px; background: linear-gradient(45deg, #f43f5e, #f59e0b); color:white; border:none; border-radius:10px; cursor:pointer; font-size: 1rem; font-weight: 700; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(244, 63, 94, 0.3); }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(244, 63, 94, 0.4); }
+        .dashboard-navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            padding: 0.7rem 1rem;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 999;
+            border-radius: 0;
+            background: var(--primary-deep);
+            border-bottom: 1px solid rgba(84, 122, 149, 0.45);
+            box-shadow: 0 2px 10px rgba(44, 57, 71, 0.25);
+        }
+
+        .navbar-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: rgba(232, 237, 242, 0.88);
+            margin-top: 1px;
+        }
+
+        .logout-btn {
+            background: var(--primary-cream);
+            color: var(--primary-deep);
+            border: 1px solid rgba(194, 165, 109, 0.7);
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-size: 0.86rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        #supervisorPanel {
+            padding-top: 68px;
+        }
+
+        @media (max-width: 980px) {
+            .training-card, .contribution-card, .performance-card { grid-column: span 12; }
+            .performance-grid { grid-template-columns: 1fr; }
+            .kpi-row { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 560px) {
+            .kpi-row { grid-template-columns: 1fr; }
+            .input-text { width: 100%; }
+        }
 
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>Global Supervisor Admin</h1>
-        <p style="color: #94a3b8; letter-spacing: 1px; font-weight: 600;">FEDERATED NETWORK OVERSEER</p>
+        <h1>Global Model Admin Dashboard</h1>
+        <p style="color: rgba(44, 57, 71, 0.72); letter-spacing: 1px; font-weight: 600;">FEDERATED LEARNING CONTROL CENTER</p>
     </div>
     
     <div class="container">
-        <!-- LOGIN PANEL -->
         <div class="glass-panel" id="loginPanel">
             <h2 class="panel-title">Authentication Required</h2>
-            <p class="panel-subtext">Enter supervisor override key to access network metrics.</p>
+            <p class="panel-subtext">Enter supervisor override key to access global model analytics.</p>
             <input type="password" id="adminPass" class="input-text" placeholder="Enter Supervisor Password (admin)">
             <br>
             <button class="btn" onclick="login()">Authenticate</button>
-            <div id="loginErr" style="color:#ef4444; margin-top:20px; display:none; font-weight: 600;">✖ Invalid credentials</div>
+            <div id="loginErr" class="error-text">Invalid credentials</div>
         </div>
         
-        <!-- MAIN TRACKING PANEL -->
         <div id="supervisorPanel" style="display:none;">
-            <div class="glass-panel" style="margin-bottom: 2.5rem;">
-                <h2 class="panel-title">Live Network Sync</h2>
-                <div style="margin: 2.5rem 0;">
-                    <div class="stat-label">Federated Round</div>
-                    <div class="stat-value" id="roundNum">1</div>
-                </div>
-                
-                <div class="stat-label" id="statusLabel" style="margin-bottom: 0.5rem; text-align: left;">Awaiting 2 Hospital nodes...</div>
-                <div class="progress-bar-bg">
-                    <div class="progress-bar-fill" id="progressBar"></div>
-                </div>
-                
-                <div class="alert">
-                    <b style="color: #f43f5e;">SYSTEM NOTICE:</b> Await decentralized hospitals to upload compressed weight matrices. The mathematical FedAvg happens securely behind the scenes without ever receiving raw patient data.
-                </div>
+            <div class="dashboard-navbar">
+                <span class="navbar-title">Admin Navigation</span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
             </div>
+            <div class="dashboard-grid">
+                <div class="glass-panel training-card">
+                    <h2 class="panel-title">Global Model Overview</h2>
+                    <p class="panel-subtext">Real-time view of training epochs, accuracy improvement, and loss reduction.</p>
 
-            <!-- PREDICTION PANEL -->
-            <div class="glass-panel" id="predictPanel">
-                <h2 class="panel-title">Evaluate Generalized AI</h2>
-                <p class="panel-subtext">Verify the active Federated Global Model. Upload an MRI to see how intelligent the globally merged algorithms are across all nodes.</p>
-                
-                <label class="upload-area" style="padding: 2rem;">
-                    <input type="file" id="imageInput" accept="image/jpeg, image/png">
-                    <div id="uploadImageText">
-                        <span style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem;">🧠</span>
-                        <span style="font-size: 1rem; font-weight: 600; color: #f59e0b;">Analyze Diagnostic Image (.jpg)</span>
+                    <div class="kpi-row">
+                        <div class="kpi">
+                            <div class="kpi-label">Federated Round</div>
+                            <div class="kpi-value" id="roundNum">1</div>
+                        </div>
+                        <div class="kpi">
+                            <div class="kpi-label">Current Epoch</div>
+                            <div class="kpi-value" id="epochNum">1</div>
+                        </div>
+                        <div class="kpi">
+                            <div class="kpi-label">Global Accuracy</div>
+                            <div class="kpi-value" id="globalAcc">88.2%</div>
+                        </div>
+                        <div class="kpi">
+                            <div class="kpi-label">Global Loss</div>
+                            <div class="kpi-value" id="globalLoss">0.39</div>
+                        </div>
                     </div>
-                </label>
-                
-                <div class="prediction-result" id="predResult">
-                    <div id="topPrediction" style="font-size: 2rem; font-weight: 700; color: #10b981; margin-bottom: 1.5rem;"></div>
-                    <div id="probBars"></div>
+
+                    <div class="chart-block">
+                        <div class="chart-title">Epoch-wise Accuracy vs Loss</div>
+                        <div class="trend-chart" id="trendChart"></div>
+                        <div class="legend-row">
+                            <span class="legend-tag"><span class="dot" style="background: var(--primary-mint);"></span>Accuracy</span>
+                            <span class="legend-tag"><span class="dot" style="background: var(--primary-cool);"></span>Loss (inverted scale)</span>
+                        </div>
+                    </div>
+
+                    <div class="status-badge" id="statusLabel">Awaiting securely trained hospital payloads...</div>
+                </div>
+
+                <div class="glass-panel contribution-card">
+                    <h2 class="panel-title">Contributions</h2>
+                    <p class="panel-subtext">Hospital contribution percentages in current global weight aggregation.</p>
+                    <div id="contributionsWrap"></div>
+                </div>
+
+                <div class="glass-panel performance-card">
+                    <h2 class="panel-title">Performance Comparisons</h2>
+                    <p class="panel-subtext">Global model metrics benchmarked against local hospital models.</p>
+                    <div class="performance-grid">
+                        <div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:left;">Model</th>
+                                        <th>Precision</th>
+                                        <th>Recall</th>
+                                        <th>F1-Score</th>
+                                        <th>AUC</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="metricsRows"></tbody>
+                            </table>
+                        </div>
+                        <div class="roc-wrap">
+                            <h4>ROC Curve Snapshot</h4>
+                            <svg viewBox="0 0 220 190" width="100%" height="190" role="img" aria-label="ROC curves">
+                                <rect x="16" y="10" width="190" height="160" fill="none" stroke="rgba(237,247,189,0.35)" />
+                                <line x1="16" y1="170" x2="206" y2="10" stroke="rgba(237,247,189,0.45)" stroke-dasharray="4 4" />
+                                <polyline id="globalRoc" fill="none" stroke="#A8B2C1" stroke-width="3" points="16,170 42,120 70,92 108,66 148,42 206,18"/>
+                                <polyline id="localRoc" fill="none" stroke="#547A95" stroke-width="3" points="16,170 46,140 82,118 120,92 160,68 206,42"/>
+                                <text x="20" y="182" fill="#2C3947" font-size="10">FPR</text>
+                                <text x="2" y="18" fill="#2C3947" font-size="10">TPR</text>
+                            </svg>
+                            <div class="legend-row" style="margin-top: 0;">
+                                <span class="legend-tag"><span class="dot" style="background: var(--primary-mint);"></span>Global</span>
+                                <span class="legend-tag"><span class="dot" style="background: var(--primary-cool);"></span>Average Local</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        let pollIntervalId = null;
+
+        const metricState = {
+            global: { precision: 0.94, recall: 0.93, f1: 0.935, auc: 0.972 },
+            local: [
+                { name: 'Hospital A', precision: 0.90, recall: 0.88, f1: 0.89, auc: 0.941 },
+                { name: 'Hospital B', precision: 0.92, recall: 0.89, f1: 0.905, auc: 0.951 },
+                { name: 'Hospital C', precision: 0.89, recall: 0.87, f1: 0.88, auc: 0.934 }
+            ],
+            contributions: [
+                { name: 'Hospital A', value: 38 },
+                { name: 'Hospital B', value: 34 },
+                { name: 'Hospital C', value: 28 }
+            ],
+            trend: [
+                { epoch: 1, acc: 0.81, loss: 0.61 },
+                { epoch: 2, acc: 0.84, loss: 0.56 },
+                { epoch: 3, acc: 0.86, loss: 0.52 },
+                { epoch: 4, acc: 0.88, loss: 0.48 },
+                { epoch: 5, acc: 0.90, loss: 0.44 },
+                { epoch: 6, acc: 0.91, loss: 0.41 }
+            ]
+        };
+
+        function toPercent(value) {
+            return `${(value * 100).toFixed(1)}%`;
+        }
+
+        function renderContributions(list) {
+            const wrap = document.getElementById('contributionsWrap');
+            wrap.innerHTML = list.map((item) => `
+                <div class="contrib-row">
+                    <div class="contrib-head">
+                        <span>${item.name}</span>
+                        <span>${item.value.toFixed(1)}%</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width: ${item.value}%;"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTrend(trend) {
+            const trendChart = document.getElementById('trendChart');
+            trendChart.innerHTML = trend.map((point) => {
+                const accHeight = Math.max(8, Math.round(point.acc * 100));
+                const lossInverted = Math.max(8, Math.round((1 - point.loss) * 100));
+                return `
+                    <div class="epoch-col">
+                        <div class="bar-stack">
+                            <div class="acc-bar" style="height:${accHeight}px"></div>
+                            <div class="loss-bar" style="height:${lossInverted}px"></div>
+                        </div>
+                        <div class="epoch-label">E${point.epoch}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderMetrics() {
+            const local = metricState.local;
+            const global = metricState.global;
+            const avgLocalAuc = local.reduce((acc, node) => acc + node.auc, 0) / local.length;
+
+            const rows = [
+                {
+                    name: 'Global Model',
+                    precision: global.precision,
+                    recall: global.recall,
+                    f1: global.f1,
+                    auc: global.auc
+                },
+                ...local
+            ];
+
+            document.getElementById('metricsRows').innerHTML = rows.map((row, index) => `
+                <tr style="${index === 0 ? 'background: rgba(172, 186, 196, 0.28);' : ''}">
+                    <td class="model-name">${row.name}</td>
+                    <td>${toPercent(row.precision)}</td>
+                    <td>${toPercent(row.recall)}</td>
+                    <td>${toPercent(row.f1)}</td>
+                    <td>${(row.auc).toFixed(3)}</td>
+                </tr>
+            `).join('');
+
+            const globalCurve = "16,170 42,120 70,92 108,66 148,42 206,18";
+            const localCurve = avgLocalAuc > 0.945
+                ? "16,170 46,136 82,112 120,86 160,62 206,40"
+                : "16,170 46,144 82,120 120,96 160,72 206,46";
+            document.getElementById('globalRoc').setAttribute('points', globalCurve);
+            document.getElementById('localRoc').setAttribute('points', localCurve);
+        }
+
+        function renderDashboard() {
+            const latestPoint = metricState.trend[metricState.trend.length - 1];
+            document.getElementById('epochNum').innerText = latestPoint.epoch;
+            document.getElementById('globalAcc').innerText = toPercent(latestPoint.acc);
+            document.getElementById('globalLoss').innerText = latestPoint.loss.toFixed(3);
+            renderTrend(metricState.trend);
+            renderContributions(metricState.contributions);
+            renderMetrics();
+        }
+
         function login() {
             if(document.getElementById('adminPass').value === "admin") {
+                document.getElementById('loginErr').style.display = "none";
                 document.getElementById('loginPanel').style.display = "none";
                 document.getElementById('supervisorPanel').style.display = "block";
+                renderDashboard();
                 startPolling();
             } else {
                 document.getElementById('loginErr').style.display = "block";
             }
         }
+
+        function logout() {
+            if (pollIntervalId) {
+                clearInterval(pollIntervalId);
+                pollIntervalId = null;
+            }
+            document.getElementById('supervisorPanel').style.display = "none";
+            document.getElementById('loginPanel').style.display = "block";
+            document.getElementById('adminPass').value = "";
+            document.getElementById('loginErr').style.display = "none";
+            document.getElementById('adminPass').focus();
+        }
         
         async function startPolling() {
-            setInterval(async () => {
+            if (pollIntervalId) return;
+
+            pollIntervalId = setInterval(async () => {
                 try {
                     const res = await fetch('/api/admin_stats');
                     const data = await res.json();
                     document.getElementById('roundNum').innerText = data.round_num;
-                    const percent = (data.clients_received / data.max_clients) * 100;
-                    document.getElementById('progressBar').style.width = percent + '%';
-                    
+
                     if (data.clients_received === data.max_clients) {
-                        document.getElementById('statusLabel').innerText = "Running FedAvg Architecture...";
+                        document.getElementById('statusLabel').innerText = "Running secure FedAvg aggregation...";
                     } else if (data.clients_received > 0) {
-                        document.getElementById('statusLabel').innerText = `Syncing (${data.clients_received}/${data.max_clients})...`;
+                        document.getElementById('statusLabel').innerText = `Syncing (${data.clients_received}/${data.max_clients}) hospital updates...`;
                     } else {
                         document.getElementById('statusLabel').innerText = "Awaiting securely trained hospital payloads...";
                     }
+
+                    if (Array.isArray(data.training_trend) && data.training_trend.length > 0) {
+                        metricState.trend = data.training_trend.map((point, index) => ({
+                            epoch: point.epoch ?? index + 1,
+                            acc: point.acc ?? point.accuracy ?? 0,
+                            loss: point.loss ?? 0
+                        }));
+                    }
+                    if (Array.isArray(data.contributions) && data.contributions.length > 0) {
+                        metricState.contributions = data.contributions.map((item, idx) => ({
+                            name: item.name ?? `Hospital ${idx + 1}`,
+                            value: Number(item.value ?? item.percentage ?? 0)
+                        }));
+                    }
+                    if (data.global_metrics) {
+                        metricState.global = {
+                            precision: data.global_metrics.precision ?? metricState.global.precision,
+                            recall: data.global_metrics.recall ?? metricState.global.recall,
+                            f1: data.global_metrics.f1 ?? metricState.global.f1,
+                            auc: data.global_metrics.auc ?? metricState.global.auc
+                        };
+                    }
+                    if (Array.isArray(data.local_metrics) && data.local_metrics.length > 0) {
+                        metricState.local = data.local_metrics.map((item, idx) => ({
+                            name: item.name ?? `Hospital ${String.fromCharCode(65 + idx)}`,
+                            precision: item.precision ?? 0,
+                            recall: item.recall ?? 0,
+                            f1: item.f1 ?? 0,
+                            auc: item.auc ?? 0
+                        }));
+                    }
+
+                    renderDashboard();
                 } catch (e) {}
             }, 2000);
         }
-
-        // Image Prediction Logic
-        document.getElementById('imageInput').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const resPanel = document.getElementById('predResult');
-            resPanel.classList.add('active');
-            
-            document.getElementById('topPrediction').innerHTML = "<span style='color:#f59e0b; animation: pulse 1.5s infinite;'>Solving Neural Network...</span>";
-            document.getElementById('probBars').innerHTML = "";
-
-            const formData = new FormData();
-            formData.append('file', file);
-
-            try {
-                const res = await fetch('/api/predict', { method: 'POST', body: formData });
-                if (!res.ok) {
-                    const txt = await res.text();
-                    throw new Error(`System crash via ${res.status}: ${txt}`);
-                }
-                const data = await res.json();
-                if (data.error) throw new Error(data.error);
-
-                document.getElementById('topPrediction').innerHTML = `${data.predicted} <span style="font-size:1.2rem; color:#94a3b8; margin-left: 10px;">(${(data.confidence * 100).toFixed(1)}%)</span>`;
-                
-                let barsHtml = "";
-                for (const [cls, prob] of Object.entries(data.probabilities)) {
-                    const percent = (prob * 100).toFixed(1);
-                    barsHtml += `
-                        <div class="prob-bar-container">
-                            <div class="prob-label">${cls.toUpperCase()}</div>
-                            <div class="prob-bar-wrapper">
-                                <div class="prob-fill" style="width: ${percent}%;"></div>
-                            </div>
-                            <div style="width:50px; text-align:right; font-size:0.85rem; color:#94a3b8; font-weight:600;">${percent}%</div>
-                        </div>
-                    `;
-                }
-                document.getElementById('probBars').innerHTML = barsHtml;
-            } catch (err) {
-                document.getElementById('topPrediction').innerHTML = `<span style="color:#f43f5e; font-size:1.2rem;">✖ ${err.message}</span>`;
-            }
-            e.target.value = "";
-        });
     </script>
 </body>
 </html>
