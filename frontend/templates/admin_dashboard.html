@@ -356,8 +356,22 @@
             padding-top: 68px;
         }
 
+        .security-card { grid-column: span 12; }
+
+        .audit-pre {
+            margin: 0;
+            padding: 0.75rem;
+            border-radius: 10px;
+            background: rgba(84, 122, 149, 0.08);
+            border: 1px solid rgba(84, 122, 149, 0.22);
+            color: rgba(44, 57, 71, 0.92);
+            font-size: 0.82rem;
+            white-space: pre-wrap;
+            line-height: 1.45;
+        }
+
         @media (max-width: 980px) {
-            .training-card, .contribution-card, .performance-card { grid-column: span 12; }
+            .training-card, .contribution-card, .performance-card, .security-card { grid-column: span 12; }
             .performance-grid { grid-template-columns: 1fr; }
             .kpi-row { grid-template-columns: repeat(2, 1fr); }
         }
@@ -430,6 +444,29 @@
                     <h2 class="panel-title">Contributions</h2>
                     <p class="panel-subtext">Hospital contribution percentages in current global weight aggregation.</p>
                     <div id="contributionsWrap"></div>
+                </div>
+
+                <div class="glass-panel security-card">
+                    <h2 class="panel-title">Aggregation &amp; defense observability</h2>
+                    <p class="panel-subtext">Aggregator mode (FedAvg variants, robust filters), Multi-Krum / trimmed-mean audit trail, RECESS probes.</p>
+                    <div class="kpi-row">
+                        <div class="kpi">
+                            <div class="kpi-label">Aggregator</div>
+                            <div class="kpi-value" id="aggregatorModeDisp" style="font-size: 0.9rem;">—</div>
+                        </div>
+                        <div class="kpi">
+                            <div class="kpi-label">Clients dropped (last round)</div>
+                            <div class="kpi-value" id="clientsBlockedDisp">—</div>
+                        </div>
+                        <div class="kpi">
+                            <div class="kpi-label">RECESS probes</div>
+                            <div class="kpi-value" id="recessShortDisp" style="font-size: 0.82rem;">—</div>
+                        </div>
+                    </div>
+                    <div class="chart-block">
+                        <div class="chart-title">Last-round audit detail</div>
+                        <pre class="audit-pre" id="lastAuditDisp">No aggregation finished yet.</pre>
+                    </div>
                 </div>
 
                 <div class="glass-panel performance-card">
@@ -566,6 +603,48 @@
             document.getElementById('localRoc').setAttribute('points', localCurve);
         }
 
+        function renderObservability(data) {
+            const agg = document.getElementById('aggregatorModeDisp');
+            if (agg) agg.textContent = data.aggregation ?? '—';
+            const drop = document.getElementById('clientsBlockedDisp');
+            if (drop) {
+                if (typeof data.clients_blocked_krum === 'number') {
+                    drop.textContent = String(data.clients_blocked_krum);
+                } else if (data.last_audit && Array.isArray(data.last_audit.clients_dropped)) {
+                    drop.textContent = String(data.last_audit.clients_dropped.length);
+                } else {
+                    drop.textContent = '0';
+                }
+            }
+            const rs = document.getElementById('recessShortDisp');
+            if (rs && data.recess) {
+                const en = data.recess.enabled ? 'on' : 'off';
+                const rq = data.recess.required ? 'required' : 'optional';
+                rs.textContent = `${en}, ${rq}`;
+            } else if (rs) rs.textContent = '—';
+
+            const ad = document.getElementById('lastAuditDisp');
+            if (ad) {
+                if (data.last_audit) {
+                    const a = data.last_audit;
+                    const lines = [
+                        `mode: ${a.mode ?? '—'}`,
+                        `clients_in: ${a.clients_in ?? '—'}`,
+                        `krum_selected (0-based): ${(a.krum_selected || []).join(', ') || '—'}`,
+                        `clients_dropped: ${(a.clients_dropped || []).join(', ') || 'none'}`,
+                        `trim_beta_used: ${a.trim_beta_used ?? '—'}`,
+                        `neighbor_m_used: ${a.neighbor_m_used ?? '—'}`,
+                        `krum_fallback: ${a.krum_fallback || 'none'}`,
+                        `sample_weight_fractions: ${(a.sample_weights_fraction || []).join(', ') || '—'}`,
+                        `recess_required_last_round: ${a.recess_was_required_last_round ?? '—'}`,
+                    ];
+                    ad.textContent = lines.join('\n');
+                } else {
+                    ad.textContent = 'No aggregation finished yet.';
+                }
+            }
+        }
+
         function renderDashboard() {
             const latestPoint = metricState.trend[metricState.trend.length - 1];
             document.getElementById('epochNum').innerText = latestPoint.epoch;
@@ -608,14 +687,17 @@
                     const res = await fetch('/api/admin_stats');
                     const data = await res.json();
                     document.getElementById('roundNum').innerText = data.round_num;
+                    const modeTag = data.aggregation ? ` [${data.aggregation}]` : '';
 
                     if (data.clients_received === data.max_clients) {
-                        document.getElementById('statusLabel').innerText = "Running secure FedAvg aggregation...";
+                        document.getElementById('statusLabel').innerText = `Running secure aggregation${modeTag}...`;
                     } else if (data.clients_received > 0) {
-                        document.getElementById('statusLabel').innerText = `Syncing (${data.clients_received}/${data.max_clients}) hospital updates...`;
+                        document.getElementById('statusLabel').innerText = `Syncing (${data.clients_received}/${data.max_clients}) hospital updates${modeTag}...`;
                     } else {
-                        document.getElementById('statusLabel').innerText = "Awaiting securely trained hospital payloads...";
+                        document.getElementById('statusLabel').innerText = `Awaiting securely trained hospital payloads${modeTag}...`;
                     }
+
+                    renderObservability(data);
 
                     if (Array.isArray(data.training_trend) && data.training_trend.length > 0) {
                         metricState.trend = data.training_trend.map((point, index) => ({

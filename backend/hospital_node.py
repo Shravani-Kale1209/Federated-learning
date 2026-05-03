@@ -12,7 +12,6 @@ import shutil
 import zipfile
 import tempfile
 import argparse
-import asyncio
 import pickle
 import requests
 import numpy as np
@@ -22,13 +21,31 @@ import uvicorn
 import tensorflow as tf
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from config import CHECKPOINTS, MODEL_NAME, IMG_SIZE, BATCH_SIZE, CLASSES
+from config import (
+    CHECKPOINTS,
+    MODEL_NAME,
+    IMG_SIZE,
+    BATCH_SIZE,
+    CLASSES,
+    FL_FEDPROX_MU,
+    HOSPITAL_RECESS,
+)
 from backend.load_compat import load_model_compat
 from backend.predict import preprocess
 
 app = FastAPI(title="Local Hospital Node")
 hospital_state = {"name": "Hospital X", "status": "Idle", "model": None}
 ADMIN_URL = "http://127.0.0.1:8000"
+_IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".bmp", ".gif", ".webp")
+
+
+def _count_training_images(root_dir: str) -> int:
+    n = 0
+    for _, _, files in os.walk(root_dir):
+        for fname in files:
+            if fname.lower().endswith(_IMAGE_EXTS):
+                n += 1
+    return max(n, 1)
 
 @app.on_event("startup")
 def startup_event():
@@ -99,15 +116,60 @@ def run_local_training(zip_path: str):
             batch_size=BATCH_SIZE,
             label_mode='int' # Simplistic matching for demo
         )
-        
-        # Train!
-        model.fit(local_ds, epochs=1, verbose=1)
-        
+        num_samples = _count_training_images(temp_dir)
+
+        # 3b. Train locally (FedProx tether to global snapshot when mu > 0)
+        anchor = [tf.constant(w, dtype=tf.float32) for w in model.get_weights()]
+        if FL_FEDPROX_MU and FL_FEDPROX_MU > 0:
+            loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)
+            opt = tf.keras.optimizers.Adam(1e-5)
+            mu = float(FL_FEDPROX_MU)
+            for _ in range(1):
+                for batch_x, batch_y in local_ds:
+                    with tf.GradientTape() as tape:
+                        preds = model(batch_x, training=True)
+                        cls_loss = loss_fn(batch_y, preds)
+                        prox = tf.cast(0.0, dtype=tf.float32)
+                        for i, vw in enumerate(model.weights):
+                            prox = prox + tf.reduce_sum(tf.square(vw - anchor[i]))
+                        total_loss = cls_loss + (mu / 2.0) * prox
+                    grads = tape.gradient(total_loss, model.trainable_variables)
+                    opt.apply_gradients(zip(grads, model.trainable_variables))
+        else:
+            model.fit(local_ds, epochs=1, verbose=1)
+
         hospital_state["status"] = "Securely streaming parameters to Admin..."
-        
-        # 4. Extract new weights and send
+
+        # 4. Optional RECESS verify (must succeed before POST if admin requires token)
+        verification_token = None
+        if HOSPITAL_RECESS:
+            try:
+                cr = requests.get(f"{ADMIN_URL}/verification/challenge", timeout=30)
+                if cr.status_code == 200:
+                    pack = pickle.loads(cr.content)
+                    token = pack["token"]
+                    inp = pack["input"]
+                    pr = hospital_state["model"].predict(inp, verbose=0)[0]
+                    rr = requests.post(
+                        f"{ADMIN_URL}/verification/respond",
+                        data=pickle.dumps(
+                            {"token": token, "probs": pr.astype(np.float32)}
+                        ),
+                        timeout=30,
+                    )
+                    if rr.ok and rr.json().get("status") == "ok":
+                        verification_token = token
+                    else:
+                        print(f"[RECESS] Verification not accepted: {rr.text}")
+            except Exception as e:
+                print(f"[RECESS] Challenge/response skipped: {e}")
+
+        # 5. Send weights (+ optional verification token)
         new_weights = model.get_weights()
-        payload = pickle.dumps(new_weights)
+        payload_dict = {"weights": new_weights, "num_samples": num_samples}
+        if verification_token:
+            payload_dict["verification_token"] = verification_token
+        payload = pickle.dumps(payload_dict)
         
         try:
             requests.post(f"{ADMIN_URL}/weights", data=payload)
