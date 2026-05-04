@@ -1,40 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tesseract | Global Admin Dashboard</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
-        
+
         :root {
-            --hosp-bg: #F9FBF8;
+            --hosp-bg: #f0f2f5;
             --hosp-navy: #1B2A4E;
             --hosp-blue: #4A90E2;
             --hosp-white: #FFFFFF;
             --hosp-text: #2D3436;
             --hosp-border: #E1E8ED;
-            --hosp-green: #4A90E2; /* Blue shade for primary actions */
+            --hosp-green: #2ECC71;
             --hosp-red: #EB5757;
-            --shadow: 0 4px 20px rgba(0,0,0,0.05);
+            --primary-accent: #4A90E2;
+            --glass: rgba(255, 255, 255, 0.8);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
         body {
             font-family: 'Outfit', sans-serif;
-            background-color: var(--hosp-bg);
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             color: var(--hosp-text);
             margin: 0;
             padding: 0;
+            min-height: 100vh;
         }
 
         header {
-            background: var(--hosp-navy);
+            background: rgba(27, 42, 78, 0.95);
+            backdrop-filter: blur(10px);
             color: white;
             padding: 1rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
 
         .container {
@@ -45,497 +58,506 @@
 
         .card {
             background: var(--hosp-white);
-            border: 1px solid var(--hosp-border);
-            border-radius: 12px;
-            padding: 1.5rem;
+            border-radius: 16px;
+            padding: 2rem;
             box-shadow: var(--shadow);
             margin-bottom: 2rem;
+            border: 1px solid rgba(255,255,255,0.3);
         }
 
-        h2 { color: var(--hosp-navy); margin-top: 0; }
+        .hidden {
+            display: none !important;
+        }
 
+        h2 {
+            color: var(--hosp-navy);
+            margin-top: 0;
+            font-weight: 700;
+            border-bottom: 2px solid var(--hosp-blue);
+            padding-bottom: 0.5rem;
+            display: inline-block;
+            margin-bottom: 1.5rem;
+        }
+
+        /* --- Login Styles --- */
+        #login-view {
+            max-width: 450px;
+            margin: 10vh auto;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--hosp-navy);
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--hosp-border);
+            font-size: 1rem;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--hosp-blue);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+
+        /* --- Stats Styles --- */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
         }
 
         .stat-box {
-            background: #F8FAFF;
-            padding: 1rem;
-            border-radius: 8px;
+            background: linear-gradient(145deg, #ffffff, #f0f0f0);
+            padding: 1.5rem;
+            border-radius: 12px;
             text-align: center;
-            border: 1px solid #E9F0FF;
+            border: 1px solid #e0e0e0;
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.02);
         }
 
-        .stat-val { font-size: 1.8rem; font-weight: 700; color: var(--hosp-navy); display: block; }
-        .stat-label { font-size: 0.8rem; color: #7F8C8D; text-transform: uppercase; }
+        .stat-val {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--hosp-blue);
+            display: block;
+            margin: 0.5rem 0;
+        }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        th { text-align: left; padding: 12px; border-bottom: 2px solid var(--hosp-border); color: #7F8C8D; font-size: 0.9rem; }
-        td { padding: 12px; border-bottom: 1px solid var(--hosp-border); }
+        .stat-label {
+            font-size: 0.85rem;
+            color: #7F8C8D;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
 
+        /* --- Table Styles --- */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 1rem;
+        }
+
+        th {
+            text-align: left;
+            padding: 16px;
+            background: #f8f9fa;
+            color: var(--hosp-navy);
+            font-weight: 700;
+            border-bottom: 2px solid var(--hosp-border);
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid var(--hosp-border);
+            vertical-align: middle;
+        }
+
+        tr:hover td {
+            background-color: rgba(74, 144, 226, 0.05);
+        }
+
+        /* --- Buttons --- */
         .btn {
-            padding: 8px 16px;
-            border-radius: 6px;
+            padding: 12px 24px;
+            border-radius: 10px;
             border: none;
             cursor: pointer;
-            font-weight: 600;
-            transition: 0.2s;
+            font-weight: 700;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        .btn-approve { background: var(--hosp-green); color: white; }
-        .btn-approve:hover { opacity: 0.9; }
 
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; }
+        .btn-primary {
+            background: var(--hosp-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #357ABD;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(74, 144, 226, 0.3);
+        }
+
+        .btn-success {
+            background: var(--hosp-green);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #27ae60;
+            transform: translateY(-2px);
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
         .badge-pending { background: #FFF4E5; color: #D35400; }
         .badge-active { background: #E8F8F5; color: #16A085; }
 
-<<<<<<< HEAD
-        .hidden { display: none !important; }
-        .contributor-list { font-size: 0.9rem; color: #7F8C8D; margin-top: 5px; }
-=======
-        .navbar-title {
+        .contributor-list {
             font-size: 0.9rem;
-            font-weight: 600;
-            color: rgba(232, 237, 242, 0.88);
-            margin-top: 1px;
+            color: #7F8C8D;
+            margin-top: 10px;
+            font-style: italic;
         }
 
         .logout-btn {
-            background: var(--primary-cream);
-            color: var(--primary-deep);
-            border: 1px solid rgba(194, 165, 109, 0.7);
-            border-radius: 10px;
-            padding: 10px 16px;
-            font-size: 0.86rem;
-            font-weight: 700;
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.5);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s ease;
         }
 
         .logout-btn:hover {
-            transform: translateY(-1px);
+            background: rgba(255,255,255,0.1);
         }
 
-        #supervisorPanel {
-            padding-top: 68px;
-        }
-
-        .security-card { grid-column: span 12; }
-
+        /* --- Observability --- */
         .audit-pre {
-            margin: 0;
-            padding: 0.75rem;
-            border-radius: 10px;
-            background: rgba(84, 122, 149, 0.08);
-            border: 1px solid rgba(84, 122, 149, 0.22);
-            color: rgba(44, 57, 71, 0.92);
-            font-size: 0.82rem;
-            white-space: pre-wrap;
-            line-height: 1.45;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1.5rem;
+            border-radius: 12px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            overflow-x: auto;
+            border: 1px solid #333;
         }
 
-        @media (max-width: 980px) {
-            .training-card, .contribution-card, .performance-card, .security-card { grid-column: span 12; }
-            .performance-grid { grid-template-columns: 1fr; }
-            .kpi-row { grid-template-columns: repeat(2, 1fr); }
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
         }
 
-        @media (max-width: 560px) {
-            .kpi-row { grid-template-columns: 1fr; }
-            .input-text { width: 100%; }
+        .kpi {
+            background: #fff;
+            padding: 1.2rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--hosp-blue);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
->>>>>>> 0b32c887abec9099fdbb81cee06dc969fa8f32a7
+
+        .kpi-label { font-size: 0.75rem; color: #7F8C8D; text-transform: uppercase; margin-bottom: 0.5rem; }
+        .kpi-value { font-size: 1.1rem; font-weight: 700; color: var(--hosp-navy); }
 
     </style>
 </head>
+
 <body>
 
     <header>
-        <div style="font-size: 1.5rem; font-weight: 700;">TESSERACT ADMIN</div>
-        <div>
-            <span id="status-light" style="display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--hosp-green); margin-right:5px;"></span>
-            SYSTEM ONLINE
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="background: white; color: var(--hosp-navy); width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.2rem;">T</div>
+            <div style="font-size: 1.3rem; font-weight: 700; letter-spacing: 0.5px;">TESSERACT <span style="font-weight: 300; opacity: 0.8;">ADMIN</span></div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <div id="connection-status" style="font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                <span id="status-light" style="display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--hosp-green); box-shadow: 0 0 8px var(--hosp-green);"></span>
+                SYSTEM ONLINE
+            </div>
+            <button id="logout-btn" class="logout-btn hidden" onclick="logout()">LOGOUT</button>
         </div>
     </header>
 
     <div class="container">
         <!-- LOGIN PANEL -->
-        <div id="login-view" class="card" style="max-width: 400px; margin: 4rem auto;">
-            <h2>Admin Authentication</h2>
-            <p style="font-size: 0.9rem; color: #7F8C8D;">Secure Gateway Access</p>
-            <input type="text" id="admin-user" placeholder="Admin Username (ADMIN)" style="width:100%; padding:10px; margin-bottom:1rem; border-radius:8px; border:1px solid var(--hosp-border);" value="ADMIN">
-            <button class="btn btn-approve" style="width:100%;" onclick="adminLogin()">Request OTP</button>
+        <div id="login-view" class="card">
+            <div style="margin-bottom: 2rem;">
+                <h2 style="border:none; margin:0;">Welcome back</h2>
+                <p style="color: #7F8C8D; margin-top: 0.5rem;">Access the global federated learning supervisor.</p>
+            </div>
+            
+            <div class="input-group">
+                <label for="admin-user">Administrator Identifier</label>
+                <input type="text" id="admin-user" placeholder="e.g. ADMIN" value="ADMIN">
+            </div>
+            
+            <button class="btn btn-primary" style="width:100%;" onclick="adminLogin()">
+                Request Access Token
+            </button>
+            
+            <div id="otp-area" class="hidden" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--hosp-border);">
+                <div class="input-group">
+                    <label for="admin-otp">Enter Verification Code</label>
+                    <input type="text" id="admin-otp" placeholder="6-digit OTP">
+                </div>
+                <button class="btn btn-success" style="width:100%;" onclick="verifyOtp()">
+                    Verify & Enter Dashboard
+                </button>
+            </div>
         </div>
 
+        <!-- DASHBOARD CONTENT -->
         <div id="admin-content" class="hidden">
-            <!-- GLOBAL STATS -->
+            
+            <!-- GLOBAL PERFORMANCE -->
             <div class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h2>Global Model Intelligence</h2>
-                    <span id="sync-status" style="font-size: 0.8rem; color: var(--hosp-green);">● LIVE UPDATING</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2 style="margin:0;">Model Intelligence</h2>
+                    <div style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--hosp-blue); font-weight: 700;">
+                        <span style="animation: pulse 2s infinite;">●</span> LIVE TELEMETRY
+                    </div>
                 </div>
+                
                 <div class="stats-grid">
                     <div class="stat-box">
-                        <span class="stat-label">Model Accuracy</span>
+                        <span class="stat-label">Aggregated Accuracy</span>
                         <span id="stat-acc" class="stat-val">--%</span>
                     </div>
                     <div class="stat-box">
-                        <span class="stat-label">Federated Round</span>
+                        <span class="stat-label">Current FL Round</span>
                         <span id="stat-round" class="stat-val">--</span>
                     </div>
                     <div class="stat-box">
-                        <span class="stat-label">Round Progress</span>
-                        <span id="stat-nodes" class="stat-val">0/2</span>
-                        <div id="contributing-nodes" class="contributor-list">Waiting for nodes...</div>
+                        <span class="stat-label">Node Participation</span>
+                        <span id="stat-nodes" class="stat-val">0/0</span>
+                        <div id="contributing-nodes" class="contributor-list">Syncing network...</div>
                     </div>
                 </div>
             </div>
 
-            <!-- PENDING REQUESTS -->
+            <!-- SECURITY & DEFENSE -->
             <div class="card">
-                <h2>Pending Authorizations</h2>
-                <table>
-                    <thead><tr><th>Org ID</th><th>Name</th><th>Email</th><th>Action</th></tr></thead>
-                    <tbody id="pending-list"></tbody>
-                </table>
+                <h2>Defense Observability</h2>
+                <div class="kpi-row">
+                    <div class="kpi">
+                        <div class="kpi-label">Primary Aggregator</div>
+                        <div class="kpi-value" id="aggregatorModeDisp">—</div>
+                    </div>
+                    <div class="kpi">
+                        <div class="kpi-label">Anomalous Clients Filtered</div>
+                        <div class="kpi-value" id="clientsBlockedDisp">0</div>
+                    </div>
+                    <div class="kpi">
+                        <div class="kpi-label">RECESS Status</div>
+                        <div class="kpi-value" id="recessShortDisp">—</div>
+                    </div>
+                </div>
+                <div>
+                    <h4 style="color: #7F8C8D; margin-bottom: 0.5rem; font-size: 0.8rem; text-transform: uppercase;">Last Round Audit Trail</h4>
+                    <pre class="audit-pre" id="lastAuditDisp">Initializing audit logs...</pre>
+                </div>
             </div>
 
-<<<<<<< HEAD
-            <!-- ACTIVE NETWORK -->
-            <div class="card">
-                <h2>Authorized Health Network</h2>
-                <table>
-                    <thead><tr><th>Org ID</th><th>Name</th><th>Status</th></tr></thead>
-                    <tbody id="active-list"></tbody>
-                </table>
-=======
-                    <div class="chart-block">
-                        <div class="chart-title">Epoch-wise Accuracy vs Loss</div>
-                        <div class="trend-chart" id="trendChart"></div>
-                        <div class="legend-row">
-                            <span class="legend-tag"><span class="dot" style="background: var(--primary-mint);"></span>Accuracy</span>
-                            <span class="legend-tag"><span class="dot" style="background: var(--primary-cool);"></span>Loss (inverted scale)</span>
-                        </div>
-                    </div>
-
-                    <div class="status-badge" id="statusLabel">Awaiting securely trained hospital payloads...</div>
-                </div>
-
-                <div class="glass-panel contribution-card">
-                    <h2 class="panel-title">Contributions</h2>
-                    <p class="panel-subtext">Hospital contribution percentages in current global weight aggregation.</p>
-                    <div id="contributionsWrap"></div>
-                </div>
-
-                <div class="glass-panel security-card">
-                    <h2 class="panel-title">Aggregation &amp; defense observability</h2>
-                    <p class="panel-subtext">Aggregator mode (FedAvg variants, robust filters), Multi-Krum / trimmed-mean audit trail, RECESS probes.</p>
-                    <div class="kpi-row">
-                        <div class="kpi">
-                            <div class="kpi-label">Aggregator</div>
-                            <div class="kpi-value" id="aggregatorModeDisp" style="font-size: 0.9rem;">—</div>
-                        </div>
-                        <div class="kpi">
-                            <div class="kpi-label">Clients dropped (last round)</div>
-                            <div class="kpi-value" id="clientsBlockedDisp">—</div>
-                        </div>
-                        <div class="kpi">
-                            <div class="kpi-label">RECESS probes</div>
-                            <div class="kpi-value" id="recessShortDisp" style="font-size: 0.82rem;">—</div>
-                        </div>
-                    </div>
-                    <div class="chart-block">
-                        <div class="chart-title">Last-round audit detail</div>
-                        <pre class="audit-pre" id="lastAuditDisp">No aggregation finished yet.</pre>
+            <!-- HOSPITAL MANAGEMENT -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 2rem;">
+                
+                <!-- PENDING -->
+                <div class="card">
+                    <h2>Pending Requests</h2>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Organization</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pending-list">
+                                <tr><td colspan="3" style="text-align:center; color:#999;">No pending authorizations</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                <div class="glass-panel performance-card">
-                    <h2 class="panel-title">Performance Comparisons</h2>
-                    <p class="panel-subtext">Global model metrics benchmarked against local hospital models.</p>
-                    <div class="performance-grid">
-                        <div>
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th style="text-align:left;">Model</th>
-                                        <th>Precision</th>
-                                        <th>Recall</th>
-                                        <th>F1-Score</th>
-                                        <th>AUC</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="metricsRows"></tbody>
-                            </table>
-                        </div>
-                        <div class="roc-wrap">
-                            <h4>ROC Curve Snapshot</h4>
-                            <svg viewBox="0 0 220 190" width="100%" height="190" role="img" aria-label="ROC curves">
-                                <rect x="16" y="10" width="190" height="160" fill="none" stroke="rgba(237,247,189,0.35)" />
-                                <line x1="16" y1="170" x2="206" y2="10" stroke="rgba(237,247,189,0.45)" stroke-dasharray="4 4" />
-                                <polyline id="globalRoc" fill="none" stroke="#A8B2C1" stroke-width="3" points="16,170 42,120 70,92 108,66 148,42 206,18"/>
-                                <polyline id="localRoc" fill="none" stroke="#547A95" stroke-width="3" points="16,170 46,140 82,118 120,92 160,68 206,42"/>
-                                <text x="20" y="182" fill="#2C3947" font-size="10">FPR</text>
-                                <text x="2" y="18" fill="#2C3947" font-size="10">TPR</text>
-                            </svg>
-                            <div class="legend-row" style="margin-top: 0;">
-                                <span class="legend-tag"><span class="dot" style="background: var(--primary-mint);"></span>Global</span>
-                                <span class="legend-tag"><span class="dot" style="background: var(--primary-cool);"></span>Average Local</span>
-                            </div>
-                        </div>
+                <!-- ACTIVE -->
+                <div class="card">
+                    <h2>Authorized Network</h2>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Organization</th>
+                                    <th>Identity</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="active-list">
+                                <tr><td colspan="3" style="text-align:center; color:#999;">Searching for active nodes...</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
+
+            </div>
+        </div>
+    </div>
+
     <script>
-        let adminToken = null;
+        let adminToken = localStorage.getItem('adminToken');
         let pollIntervalId = null;
 
-        const metricState = {
-            global: { precision: 0.94, recall: 0.93, f1: 0.935, auc: 0.972 },
-            local: [
-                { name: 'Hospital A', precision: 0.90, recall: 0.88, f1: 0.89, auc: 0.941 },
-                { name: 'Hospital B', precision: 0.92, recall: 0.89, f1: 0.905, auc: 0.951 },
-                { name: 'Hospital C', precision: 0.89, recall: 0.87, f1: 0.88, auc: 0.934 }
-            ],
-            contributions: [
-                { name: 'Hospital A', value: 38 },
-                { name: 'Hospital B', value: 34 },
-                { name: 'Hospital C', value: 28 }
-            ],
-            trend: [
-                { epoch: 1, acc: 0.81, loss: 0.61 },
-                { epoch: 2, acc: 0.84, loss: 0.56 },
-                { epoch: 3, acc: 0.86, loss: 0.52 },
-                { epoch: 4, acc: 0.88, loss: 0.48 },
-                { epoch: 5, acc: 0.90, loss: 0.44 },
-                { epoch: 6, acc: 0.91, loss: 0.41 }
-            ]
-        };
+        // Initialize if token exists
+        if (adminToken) {
+            showDashboard();
+        }
 
         async function adminLogin() {
             const username = document.getElementById('admin-user').value.toUpperCase();
-            const res = await fetch('/api/auth/request-otp', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ username })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                const otp = prompt("DEMO MODE: Admin OTP is " + data.debug_otp + "\nEnter it here:");
-                if (!otp) return;
+            if(!username) return alert("Enter admin username");
+
+            try {
+                const res = await fetch('/api/auth/request-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username })
+                });
+                const data = await res.json();
                 
+                if (res.ok) {
+                    document.getElementById('otp-area').classList.remove('hidden');
+                    alert("DEBUG MODE: Your OTP is " + data.debug_otp);
+                    document.getElementById('admin-otp').focus();
+                } else {
+                    alert(data.detail || "Authentication request failed");
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Server connection failed");
+            }
+        }
+
+        async function verifyOtp() {
+            const username = document.getElementById('admin-user').value.toUpperCase();
+            const otp = document.getElementById('admin-otp').value;
+            
+            try {
                 const verifyRes = await fetch('/api/auth/verify-otp', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, otp })
                 });
                 const verifyData = await verifyRes.json();
+                
                 if (verifyData.token) {
                     adminToken = verifyData.token;
-                    document.getElementById('login-view').classList.add('hidden');
-                    document.getElementById('admin-content').classList.remove('hidden');
-                    loadData();
-                    startPolling();
+                    localStorage.setItem('adminToken', adminToken);
+                    showDashboard();
                 } else {
-                    alert("Verification failed");
+                    alert("Verification failed: " + (verifyData.detail || "Invalid code"));
                 }
-            } else {
-                alert(data.detail || "Login failed");
+            } catch (e) {
+                alert("Verification failed");
             }
         }
 
-        function toPercent(value) {
-            return `${(value * 100).toFixed(1)}%`;
+        function showDashboard() {
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('admin-content').classList.remove('hidden');
+            document.getElementById('logout-btn').classList.remove('hidden');
+            loadData();
+            startPolling();
         }
 
-        function renderContributions(list) {
-            const wrap = document.getElementById('contributionsWrap');
-            if (!wrap) return;
-            wrap.innerHTML = list.map((item) => `
-                <div class="contrib-row">
-                    <div class="contrib-head">
-                        <span>${item.name}</span>
-                        <span>${item.value.toFixed(1)}%</span>
-                    </div>
-                    <div class="progress-bar-bg">
-                        <div class="progress-bar-fill" style="width: ${item.value}%;"></div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function renderTrend(trend) {
-            const trendChart = document.getElementById('trendChart');
-            if (!trendChart) return;
-            trendChart.innerHTML = trend.map((point) => {
-                const accHeight = Math.max(8, Math.round(point.acc * 100));
-                const lossInverted = Math.max(8, Math.round((1 - point.loss) * 100));
-                return `
-                    <div class="epoch-col">
-                        <div class="bar-stack">
-                            <div class="acc-bar" style="height:${accHeight}px"></div>
-                            <div class="loss-bar" style="height:${lossInverted}px"></div>
-                        </div>
-                        <div class="epoch-label">E${point.epoch}</div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function renderMetrics() {
-            const local = metricState.local;
-            const global = metricState.global;
-            const avgLocalAuc = local.reduce((acc, node) => acc + node.auc, 0) / local.length;
-
-            const rows = [
-                {
-                    name: 'Global Model',
-                    precision: global.precision,
-                    recall: global.recall,
-                    f1: global.f1,
-                    auc: global.auc
-                },
-                ...local
-            ];
-
-            const metricsRows = document.getElementById('metricsRows');
-            if (metricsRows) {
-                metricsRows.innerHTML = rows.map((row, index) => `
-                    <tr style="${index === 0 ? 'background: rgba(172, 186, 196, 0.28);' : ''}">
-                        <td class="model-name">${row.name}</td>
-                        <td>${toPercent(row.precision)}</td>
-                        <td>${toPercent(row.recall)}</td>
-                        <td>${toPercent(row.f1)}</td>
-                        <td>${(row.auc).toFixed(3)}</td>
-                    </tr>
-                `).join('');
-            }
-
-            const globalRoc = document.getElementById('globalRoc');
-            const localRoc = document.getElementById('localRoc');
-            if (globalRoc && localRoc) {
-                const globalCurve = "16,170 42,120 70,92 108,66 148,42 206,18";
-                const localCurve = avgLocalAuc > 0.945
-                    ? "16,170 46,136 82,112 120,86 160,62 206,40"
-                    : "16,170 46,144 82,120 120,96 160,72 206,46";
-                globalRoc.setAttribute('points', globalCurve);
-                localRoc.setAttribute('points', localCurve);
-            }
-        }
-
-        function renderObservability(data) {
-            const agg = document.getElementById('aggregatorModeDisp');
-            if (agg) agg.textContent = data.aggregation ?? '—';
-            const drop = document.getElementById('clientsBlockedDisp');
-            if (drop) {
-                if (typeof data.clients_blocked_krum === 'number') {
-                    drop.textContent = String(data.clients_blocked_krum);
-                } else if (data.last_audit && Array.isArray(data.last_audit.clients_dropped)) {
-                    drop.textContent = String(data.last_audit.clients_dropped.length);
-                } else {
-                    drop.textContent = '0';
-                }
-            }
-            const rs = document.getElementById('recessShortDisp');
-            if (rs && data.recess) {
-                const en = data.recess.enabled ? 'on' : 'off';
-                const rq = data.recess.required ? 'required' : 'optional';
-                rs.textContent = `${en}, ${rq}`;
-            } else if (rs) rs.textContent = '—';
-
-            const ad = document.getElementById('lastAuditDisp');
-            if (ad) {
-                if (data.last_audit) {
-                    const a = data.last_audit;
-                    const lines = [
-                        `mode: ${a.mode ?? '—'}`,
-                        `clients_in: ${a.clients_in ?? '—'}`,
-                        `krum_selected (0-based): ${(a.krum_selected || []).join(', ') || '—'}`,
-                        `clients_dropped: ${(a.clients_dropped || []).join(', ') || 'none'}`,
-                        `trim_beta_used: ${a.trim_beta_used ?? '—'}`,
-                        `neighbor_m_used: ${a.neighbor_m_used ?? '—'}`,
-                        `krum_fallback: ${a.krum_fallback || 'none'}`,
-                        `sample_weight_fractions: ${(a.sample_weights_fraction || []).join(', ') || '—'}`,
-                        `recess_required_last_round: ${a.recess_was_required_last_round ?? '—'}`,
-                    ];
-                    ad.textContent = lines.join('\n');
-                } else {
-                    ad.textContent = 'No aggregation finished yet.';
-                }
-            }
-        }
-
-        function renderDashboard() {
-            const latestPoint = metricState.trend[metricState.trend.length - 1];
-            const epochNum = document.getElementById('epochNum');
-            const globalAcc = document.getElementById('globalAcc');
-            const globalLoss = document.getElementById('globalLoss');
-            
-            if (epochNum) epochNum.innerText = latestPoint.epoch;
-            if (globalAcc) globalAcc.innerText = toPercent(latestPoint.acc);
-            if (globalLoss) globalLoss.innerText = latestPoint.loss.toFixed(3);
-            
-            renderTrend(metricState.trend);
-            renderContributions(metricState.contributions);
-            renderMetrics();
+        function logout() {
+            adminToken = null;
+            localStorage.removeItem('adminToken');
+            if(pollIntervalId) clearInterval(pollIntervalId);
+            location.reload();
         }
 
         async function loadData() {
             if (!adminToken) return;
             try {
+                // Main Stats
                 const statsRes = await fetch('/api/stats', {
-                    headers: {'Authorization': 'Bearer ' + adminToken}
+                    headers: { 'Authorization': 'Bearer ' + adminToken }
                 });
+                if(statsRes.status === 401) return logout();
                 const stats = await statsRes.json();
-                
-                const statAcc = document.getElementById('stat-acc');
-                const statRound = document.getElementById('stat-round');
-                const statNodes = document.getElementById('stat-nodes');
-                const contributingNodes = document.getElementById('contributing-nodes');
 
-                if (statAcc) statAcc.innerText = (stats.accuracy * 100).toFixed(1) + "%";
-                if (statRound) statRound.innerText = stats.round_num;
-                if (statNodes) statNodes.innerText = `${stats.nodes_active}/${stats.max_nodes}`;
-                
-                if (contributingNodes) {
-                    const contributors = stats.contributing.length > 0 
-                        ? "In Round: " + stats.contributing.join(", ") 
-                        : "Waiting for round start...";
-                    contributingNodes.innerText = contributors;
-                }
+                document.getElementById('stat-acc').innerText = (stats.accuracy * 100).toFixed(1) + "%";
+                document.getElementById('stat-round').innerText = stats.round_num;
+                document.getElementById('stat-nodes').innerText = `${stats.nodes_active}/${stats.max_nodes}`;
+                document.getElementById('contributing-nodes').innerText = stats.contributing.length > 0 
+                    ? "In Round: " + stats.contributing.join(", ") 
+                    : "Waiting for round contribution...";
 
+                // Hospital List
                 const hospRes = await fetch('/api/admin/hospitals', {
-                    headers: {'Authorization': 'Bearer ' + adminToken}
+                    headers: { 'Authorization': 'Bearer ' + adminToken }
                 });
                 const hospitals = await hospRes.json();
-                
+
                 const pendingBody = document.getElementById('pending-list');
                 const activeBody = document.getElementById('active-list');
-                if (pendingBody && activeBody) {
-                    pendingBody.innerHTML = '';
-                    activeBody.innerHTML = '';
+                
+                pendingBody.innerHTML = '';
+                activeBody.innerHTML = '';
 
-                    for (const [id, info] of Object.entries(hospitals)) {
-                        if (info.status === 'PENDING') {
-                            pendingBody.innerHTML += `
-                                <tr>
-                                    <td><strong>${id}</strong></td>
-                                    <td>${info.name}</td>
-                                    <td>${info.email}</td>
-                                    <td><button class="btn btn-approve" onclick="approve('${id}')">Authorize</button></td>
-                                </tr>
-                            `;
-                        } else {
-                            activeBody.innerHTML += `
-                                <tr>
-                                    <td><strong>${id}</strong></td>
-                                    <td>${info.name}</td>
-                                    <td><span class="badge badge-active">${info.status}</span></td>
-                                </tr>
-                            `;
-                        }
+                let pendingCount = 0;
+                let activeCount = 0;
+
+                for (const [id, info] of Object.entries(hospitals)) {
+                    if (info.status === 'PENDING') {
+                        pendingCount++;
+                        pendingBody.innerHTML += `
+                            <tr>
+                                <td>
+                                    <div style="font-weight:700;">${id}</div>
+                                    <div style="font-size:0.8rem; color:#7F8C8D;">${info.name}</div>
+                                </td>
+                                <td><span class="badge badge-pending">PENDING</span></td>
+                                <td><button class="btn btn-success" style="padding: 6px 12px; font-size: 0.8rem;" onclick="approve('${id}')">AUTHORIZE</button></td>
+                            </tr>
+                        `;
+                    } else {
+                        activeCount++;
+                        activeBody.innerHTML += `
+                            <tr>
+                                <td><strong>${id}</strong></td>
+                                <td>${info.name}</td>
+                                <td><span class="badge badge-active">${info.status}</span></td>
+                            </tr>
+                        `;
                     }
                 }
+                
+                if(pendingCount === 0) pendingBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999; padding:2rem;">No pending authorizations</td></tr>';
+                if(activeCount === 0) activeBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999; padding:2rem;">No active nodes</td></tr>';
+
             } catch (e) { console.error(e); }
         }
 
@@ -543,73 +565,54 @@
             if (pollIntervalId) clearInterval(pollIntervalId);
             pollIntervalId = setInterval(async () => {
                 try {
-                    const res = await fetch('/api/admin_stats');
+                    const res = await fetch('/api/admin_stats', {
+                        headers: { 'Authorization': 'Bearer ' + adminToken }
+                    });
                     const data = await res.json();
+
+                    document.getElementById('aggregatorModeDisp').textContent = data.aggregation ?? '—';
                     
-                    const roundNum = document.getElementById('roundNum');
-                    const statusLabel = document.getElementById('statusLabel');
-                    
-                    if (roundNum) roundNum.innerText = data.round_num;
-                    const modeTag = data.aggregation ? ` [${data.aggregation}]` : '';
+                    let blocked = 0;
+                    if (typeof data.clients_blocked_krum === 'number') blocked = data.clients_blocked_krum;
+                    else if (data.last_audit && data.last_audit.clients_dropped) blocked = data.last_audit.clients_dropped.length;
+                    document.getElementById('clientsBlockedDisp').textContent = blocked;
 
-                    if (statusLabel) {
-                        if (data.clients_received === data.max_clients) {
-                            statusLabel.innerText = `Running secure aggregation${modeTag}...`;
-                        } else if (data.clients_received > 0) {
-                            statusLabel.innerText = `Syncing (${data.clients_received}/${data.max_clients}) hospital updates${modeTag}...`;
-                        } else {
-                            statusLabel.innerText = `Awaiting securely trained hospital payloads${modeTag}...`;
-                        }
+                    if (data.recess) {
+                        const en = data.recess.enabled ? 'Enabled' : 'Disabled';
+                        const rq = data.recess.required ? '(Strict)' : '(Optional)';
+                        document.getElementById('recessShortDisp').textContent = `${en} ${rq}`;
                     }
 
-                    renderObservability(data);
-
-                    if (Array.isArray(data.training_trend) && data.training_trend.length > 0) {
-                        metricState.trend = data.training_trend.map((point, index) => ({
-                            epoch: point.epoch ?? index + 1,
-                            acc: point.acc ?? point.accuracy ?? 0,
-                            loss: point.loss ?? 0
-                        }));
-                    }
-                    if (Array.isArray(data.contributions) && data.contributions.length > 0) {
-                        metricState.contributions = data.contributions.map((item, idx) => ({
-                            name: item.name ?? `Hospital ${idx + 1}`,
-                            value: Number(item.value ?? item.percentage ?? 0)
-                        }));
-                    }
-                    if (data.global_metrics) {
-                        metricState.global = {
-                            precision: data.global_metrics.precision ?? metricState.global.precision,
-                            recall: data.global_metrics.recall ?? metricState.global.recall,
-                            f1: data.global_metrics.f1 ?? metricState.global.f1,
-                            auc: data.global_metrics.auc ?? metricState.global.auc
-                        };
-                    }
-                    if (Array.isArray(data.local_metrics) && data.local_metrics.length > 0) {
-                        metricState.local = data.local_metrics.map((item, idx) => ({
-                            name: item.name ?? `Hospital ${String.fromCharCode(65 + idx)}`,
-                            precision: item.precision ?? 0,
-                            recall: item.recall ?? 0,
-                            f1: item.f1 ?? 0,
-                            auc: item.auc ?? 0
-                        }));
+                    const ad = document.getElementById('lastAuditDisp');
+                    if (data.last_audit) {
+                        const a = data.last_audit;
+                        ad.textContent = JSON.stringify(a, null, 2);
+                    } else {
+                        ad.textContent = 'No round data captured yet.';
                     }
 
-                    renderDashboard();
                     loadData();
-                } catch (e) {}
-            }, 3000);
+                } catch (e) { }
+            }, 5000);
         }
 
         async function approve(org_id) {
-            const res = await fetch(`/api/admin/approve-hospital/${org_id}`, { 
+            if(!confirm(`Authorize ${org_id} to join the federated network?`)) return;
+            const res = await fetch(`/api/admin/approve-hospital/${org_id}`, {
                 method: 'POST',
-                headers: {'Authorization': 'Bearer ' + adminToken}
+                headers: { 'Authorization': 'Bearer ' + adminToken }
             });
-            if (res.ok) {
-                loadData();
-            }
+            if (res.ok) loadData();
+            else alert("Approval failed");
         }
     </script>
+    <style>
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+    </style>
 </body>
+
 </html>

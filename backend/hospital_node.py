@@ -19,7 +19,6 @@ from fastapi import FastAPI, UploadFile, File, BackgroundTasks
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-import tensorflow as tf
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from config import (
@@ -31,8 +30,7 @@ from config import (
     FL_FEDPROX_MU,
     HOSPITAL_RECESS,
 )
-from backend.load_compat import load_model_compat
-from backend.predict import preprocess
+
 
 app = FastAPI(title="Local Hospital Node")
 
@@ -84,25 +82,36 @@ def get_auth_token():
 
 @app.on_event("startup")
 def startup_event():
-    model_path = os.path.join(CHECKPOINTS, f"{MODEL_NAME}_final.keras")
-    if os.path.exists(model_path):
-        model = load_model_compat(model_path)
-        model.compile(optimizer=tf.keras.optimizers.Adam(1e-5), loss="sparse_categorical_crossentropy", metrics=["accuracy"])
-        hospital_state["model"] = model
-        
-        # Initial sync
-        if get_auth_token():
-            try:
-                headers = {"Authorization": f"Bearer {hospital_state['token']}"}
-                res = requests.get(f"{ADMIN_URL}/weights", headers=headers)
-                if res.status_code == 200:
-                    global_weights = pickle.loads(res.content)
-                    model.set_weights(global_weights)
-                    print("Synchronized global weights on boot.")
-            except Exception as e:
-                print(f"Sync failed: {e}")
-    else:
-        print("CRITICAL: Base model not found in checkpoints/")
+    import threading
+    threading.Thread(target=load_model_task, daemon=True).start()
+
+def load_model_task():
+    try:
+        import tensorflow as tf
+        from backend.load_compat import load_model_compat
+        model_path = os.path.join(CHECKPOINTS, f"{MODEL_NAME}_final.keras")
+        if os.path.exists(model_path):
+            print(f"[DEBUG] Background loading model: {model_path}...")
+            model = load_model_compat(model_path)
+            model.compile(optimizer=tf.keras.optimizers.Adam(1e-5), loss="sparse_categorical_crossentropy", metrics=["accuracy"])
+            hospital_state["model"] = model
+            
+            # Initial sync
+            if get_auth_token():
+                try:
+                    headers = {"Authorization": f"Bearer {hospital_state['token']}"}
+                    res = requests.get(f"{ADMIN_URL}/weights", headers=headers)
+                    if res.status_code == 200:
+                        import pickle
+                        global_weights = pickle.loads(res.content)
+                        model.set_weights(global_weights)
+                        print("Synchronized global weights on boot.")
+                except Exception as e:
+                    print(f"Sync failed: {e}")
+        else:
+            print("CRITICAL: Base model not found in checkpoints/")
+    except Exception as e:
+        print(f"ERROR loading model in background: {e}")
 
 @app.get("/")
 def hospital_dashboard():
@@ -113,6 +122,16 @@ def hospital_dashboard():
             html = f.read()
             return HTMLResponse(content=html.replace("{{HOSPITAL_NAME}}", hospital_state["name"]))
     return HTMLResponse("Dashboard building...", status_code=404)
+
+@app.get("/register")
+def get_register_page():
+    reg_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "frontend", "templates", "register.html")
+    )
+    if os.path.exists(reg_path):
+        with open(reg_path, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    return HTMLResponse("Registration Page not found.", status_code=404)
 
 @app.get("/api/status")
 def get_status():
@@ -151,6 +170,7 @@ def run_local_training(zip_path: str):
         hospital_state["status"] = "Training locally on patient data..."
         
         # 3. Create a Local tf.data Pipeline from the extracted folder
+        import tensorflow as tf
         local_ds = tf.keras.utils.image_dataset_from_directory(
             temp_dir,
             image_size=IMG_SIZE,
@@ -160,6 +180,7 @@ def run_local_training(zip_path: str):
         num_samples = _count_training_images(temp_dir)
 
         # 3b. Train locally (FedProx tether to global snapshot when mu > 0)
+        import tensorflow as tf
         anchor = [tf.constant(w, dtype=tf.float32) for w in model.get_weights()]
         if FL_FEDPROX_MU and FL_FEDPROX_MU > 0:
             loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)
@@ -265,6 +286,7 @@ async def local_predict(file: UploadFile = File(...)):
     with open(temp_path, "wb") as f:
         f.write(content)
         
+    from backend.predict import preprocess
     try:
         tensor = preprocess(temp_path)
         probs = hospital_state["model"].predict(tensor, verbose=0)[0]

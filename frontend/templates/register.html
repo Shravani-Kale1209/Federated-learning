@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tesseract | Hardware Verification & Registration</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --hosp-bg: #F9FBF8;
+            --hosp-navy: #1B2A4E;
+            --hosp-blue: #4A90E2;
+            --hosp-white: #FFFFFF;
+            --hosp-text: #2D3436;
+            --hosp-border: #E1E8ED;
+            --hosp-green: #3498DB; 
+            --hosp-red: #EB5757;
+            --shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        * { box-sizing: border-box; transition: all 0.2s ease; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--hosp-bg);
+            color: var(--hosp-text);
+            margin: 0; padding: 0;
+            overflow-x: hidden;
+        }
+
+        header {
+            background: var(--hosp-navy);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 3rem auto;
+            padding: 0 1rem;
+        }
+
+        .card {
+            background: var(--hosp-white);
+            border: 1px solid var(--hosp-border);
+            border-radius: 12px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        h2 { color: var(--hosp-navy); margin-top: 0; font-weight: 700; }
+        p { color: #7F8C8D; margin-bottom: 2rem; }
+
+        .form-group { margin-bottom: 1.5rem; text-align: left; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; color: var(--hosp-navy); }
+
+        input[type="text"], input[type="email"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--hosp-border);
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .compliance-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+            background: #F8FAFC;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px dashed var(--hosp-border);
+        }
+
+        .file-input-wrapper {
+            display: flex;
+            flex-direction: column;
+        }
+
+        input[type="file"] {
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--hosp-blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin-top: 2rem;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
+        }
+        .btn:hover { background: #357ABD; transform: translateY(-1px); }
+
+        /* Cyber-Scan Overlay Styles */
+        #cyber-scan-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 15, 28, 0.98);
+            z-index: 10000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #00FF41; /* Classic Matrix Green */
+            font-family: 'Courier New', Courier, monospace;
+            padding: 2rem;
+        }
+
+        .terminal-box {
+            width: 100%;
+            max-width: 600px;
+            height: 300px;
+            background: #000;
+            border: 1px solid #00FF41;
+            border-radius: 8px;
+            padding: 1.5rem;
+            overflow-y: auto;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .scan-line { margin-bottom: 8px; opacity: 0; animation: typeIn 0.3s forwards; }
+        @keyframes typeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+
+        .scan-status-ok { color: #00FF41; font-weight: bold; }
+        .scan-status-wait { color: #FFB100; }
+        .scan-status-secure { color: #00D1FF; font-weight: bold; }
+
+        .spinner {
+            border: 3px solid rgba(0, 255, 65, 0.1);
+            border-top: 3px solid #00FF41;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 2rem;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .toast {
+            position: fixed;
+            bottom: 20px; right: 20px;
+            background: var(--hosp-navy);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            z-index: 11000;
+            transform: translateY(100px);
+            transition: transform 0.3s ease;
+        }
+        .toast.show { transform: translateY(0); }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div style="font-size: 1.5rem; font-weight: 900; letter-spacing: 1px;">TESSERACT <span style="font-weight: 300;">SECURE</span></div>
+        <div style="font-size: 0.8rem; opacity: 0.8; font-weight: 600;">HARDWARE ATTESTATION v2.0</div>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2>Node Registration</h2>
+            <p>Initialize secure federated connection by providing organizational credentials and hardware compliance bundle.</p>
+            
+            <div class="form-group">
+                <label>Organization Identifier (Org ID)</label>
+                <input type="text" id="reg-org" placeholder="e.g. ALPHA-MED-01">
+            </div>
+
+            <div class="form-group">
+                <label>Administrative Email Address</label>
+                <input type="email" id="reg-email" placeholder="admin@hospital.org">
+            </div>
+
+            <label>Compliance Bundle (Required Documents)</label>
+            <div class="compliance-grid">
+                <div class="file-input-wrapper">
+                    <label style="font-size: 0.75rem;">BAA (Business Assoc. Agreement)</label>
+                    <input type="file" id="file-baa" class="compliance-file">
+                </div>
+                <div class="file-input-wrapper">
+                    <label style="font-size: 0.75rem;">DUA (Data Use Agreement)</label>
+                    <input type="file" id="file-dua" class="compliance-file">
+                </div>
+                <div class="file-input-wrapper">
+                    <label style="font-size: 0.75rem;">SBOM (Software Bill of Materials)</label>
+                    <input type="file" id="file-sbom" class="compliance-file">
+                </div>
+                <div class="file-input-wrapper">
+                    <label style="font-size: 0.75rem;">TIPPSS Certification</label>
+                    <input type="file" id="file-tippss" class="compliance-file">
+                </div>
+            </div>
+
+            <button class="btn" onclick="startSecurityVerification()">Verify & Register</button>
+        </div>
+    </div>
+
+    <!-- Cyber-Scan Overlay -->
+    <div id="cyber-scan-overlay">
+        <div class="spinner"></div>
+        <h3 style="margin-bottom: 1.5rem; letter-spacing: 2px;">SECURITY PROTOCOL INITIALIZED</h3>
+        <div class="terminal-box" id="terminal-output">
+            <!-- Terminal lines injected here -->
+        </div>
+    </div>
+
+    <div id="toast" class="toast">Integrity Verified</div>
+
+    <script>
+        const ADMIN_URL = "http://127.0.0.1:8000";
+
+        function showToast(message) {
+            const t = document.getElementById('toast');
+            t.innerText = message;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        async function startSecurityVerification() {
+            const org_id = document.getElementById('reg-org').value;
+            const email = document.getElementById('reg-email').value;
+
+            if (!org_id || !email) {
+                alert("Please fill in Org ID and Email.");
+                return;
+            }
+
+            // Document Scan Simulation
+            const files = document.querySelectorAll('.compliance-file');
+            let allUploaded = true;
+            files.forEach(f => {
+                if (f.files.length === 0) allUploaded = false;
+            });
+
+            if (!allUploaded) {
+                alert("Please upload all 4 compliance documents.");
+                return;
+            }
+
+            // Start Animation
+            document.getElementById('cyber-scan-overlay').style.display = 'flex';
+            const terminal = document.getElementById('terminal-output');
+            terminal.innerHTML = '';
+
+            // Step 1: Document Scans
+            const docNames = ['BAA', 'DUA', 'SBOM', 'TIPPSS'];
+            for (let name of docNames) {
+                await addTerminalLine(`[SCAN] Analyzing ${name} document package...`, 'scan-status-wait');
+                await sleep(600);
+                await addTerminalLine(`[OK] ${name} checksum calculated: SHA-256 Verified.`, 'scan-status-ok');
+                showToast(`Integrity Verified: ${name}`);
+                await sleep(400);
+            }
+
+            // Step 2: Hardware Simulation (Remote Attestation)
+            await addTerminalLine(`[WAIT] Accessing TPM 2.0 Chip...`, 'scan-status-wait');
+            await sleep(1000);
+            await addTerminalLine(`[OK] Hardware Identity Confirmed.`, 'scan-status-ok');
+            await sleep(700);
+            await addTerminalLine(`[WAIT] Checking System Manifest...`, 'scan-status-wait');
+            await sleep(800);
+            await addTerminalLine(`[SECURE] TEE (Trusted Execution Environment) Isolated.`, 'scan-status-secure');
+            await sleep(900);
+            await addTerminalLine(`[OK] Remote Attestation Successful.`, 'scan-status-ok');
+            await sleep(1000);
+
+            await addTerminalLine(`[INFO] Finalizing registration with aggregator...`, '');
+            
+            // Backend Call
+            try {
+                const res = await fetch(`${ADMIN_URL}/api/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        org_id, 
+                        email,
+                        compliance_bundle: {
+                            verified: true,
+                            timestamp: new Date().toISOString()
+                        }
+                    })
+                });
+                const data = await res.json();
+                
+                if (data.status === 'verified') {
+                    await addTerminalLine(`[SUCCESS] Assigned Node ID: ${data.node_id}`, 'scan-status-ok');
+                    await sleep(1500);
+                    // Redirect to existing hospital dashboard
+                    window.location.href = "/"; 
+                } else {
+                    await addTerminalLine(`[ERROR] Registration rejected by server.`, 'scan-status-red');
+                }
+            } catch (e) {
+                await addTerminalLine(`[ERROR] Aggregator communication failure.`, 'scan-status-red');
+                setTimeout(() => {
+                    document.getElementById('cyber-scan-overlay').style.display = 'none';
+                    alert("Registration failed. Please check server connection.");
+                }, 2000);
+            }
+        }
+
+        function addTerminalLine(text, className) {
+            return new Promise(resolve => {
+                const line = document.createElement('div');
+                line.className = 'scan-line ' + className;
+                line.innerText = '> ' + text;
+                document.getElementById('terminal-output').appendChild(line);
+                document.getElementById('terminal-output').scrollTop = document.getElementById('terminal-output').scrollHeight;
+                setTimeout(resolve, 100);
+            });
+        }
+
+        function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+    </script>
+</body>
+</html>

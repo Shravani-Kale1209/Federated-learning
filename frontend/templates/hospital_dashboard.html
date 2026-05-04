@@ -87,7 +87,10 @@
 
     <header>
         <div style="font-size: 1.5rem; font-weight: 700;">TESSERACT NODE</div>
-        <div id="auth-status">SECURE CONNECTION</div>
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <div id="auth-status">SECURE CONNECTION</div>
+            <button id="logout-btn" class="btn hidden" style="width: auto; padding: 6px 12px; font-size: 0.8rem; background: rgba(255,255,255,0.1); border: 1px solid white;" onclick="logout()">LOGOUT</button>
+        </div>
     </header>
 
     <div class="container" id="auth-flow">
@@ -97,7 +100,7 @@
             <h2>Hospital Portal</h2>
             <p>Select your entry point to the federated network.</p>
             <button class="btn" onclick="showView('login-view')" style="margin-bottom:1rem;">Login to Dashboard</button>
-            <button class="btn" style="background:#7F8C8D;" onclick="showView('register-view')">New Registration</button>
+            <button class="btn" style="background:#7F8C8D;" onclick="window.location.href='/register'">New Registration</button>
         </div>
 
         <!-- 2. LOGIN VIEW -->
@@ -117,17 +120,6 @@
             <button class="btn" style="background:none; color:var(--hosp-blue); margin-top:1rem; border:1px solid var(--hosp-blue);" onclick="showView('selection-view')">Back</button>
         </div>
 
-        <!-- 3. REGISTER VIEW -->
-        <div id="register-view" class="card hidden">
-            <h2>Hospital Registration</h2>
-            <p>Submit your credentials for network authorization.</p>
-            <input type="text" id="reg-org" placeholder="UNIQUE ORG ID (e.g. ALPHA)">
-            <input type="text" id="reg-name" placeholder="HOSPITAL FULL NAME">
-            <input type="email" id="reg-email" placeholder="ADMIN EMAIL">
-            <button class="btn" onclick="submitRegistration()">Register for Approval</button>
-            <p class="status-msg" id="reg-status"></p>
-            <button class="btn" style="background:none; color:var(--hosp-blue); margin-top:1rem; border:1px solid var(--hosp-blue);" onclick="showView('selection-view')">Back</button>
-        </div>
     </div>
 
     <!-- 4. ACTUAL DASHBOARD (Loaded after login) -->
@@ -161,23 +153,6 @@
             document.getElementById(id).classList.remove('hidden');
         }
 
-        async function submitRegistration() {
-            const org_id = document.getElementById('reg-org').value;
-            const name = document.getElementById('reg-name').value;
-            const email = document.getElementById('reg-email').value;
-
-            const res = await fetch(`${ADMIN_URL}/api/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ org_id, hospital_name: name, email })
-            });
-            const data = await res.json();
-            document.getElementById('reg-status').innerText = data.message;
-            if (data.status === 'success') {
-                alert("Success! Now go to Admin Dashboard (Port 8000) to Approve this node.");
-                showView('selection-view');
-            }
-        }
 
         async function requestOTP() {
             const org_id = document.getElementById('login-org').value;
@@ -210,10 +185,19 @@
                 session.token = data.token;
                 document.getElementById('auth-flow').classList.add('hidden');
                 document.getElementById('dashboard-view').classList.remove('hidden');
+                document.getElementById('logout-btn').classList.remove('hidden');
                 document.getElementById('welcome-msg').innerText = `${session.org_id} | NODE ACTIVE`;
             } else {
                 alert("Verification failed");
             }
+        }
+
+        function logout() {
+            session = { token: null, org_id: null };
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('logout-btn').classList.add('hidden');
+            document.getElementById('auth-flow').classList.remove('hidden');
+            showView('selection-view');
         }
 
         async function startTraining() {
