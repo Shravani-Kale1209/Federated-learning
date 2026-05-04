@@ -90,8 +90,62 @@
         .badge-pending { background: #FFF4E5; color: #D35400; }
         .badge-active { background: #E8F8F5; color: #16A085; }
 
+<<<<<<< HEAD
         .hidden { display: none !important; }
         .contributor-list { font-size: 0.9rem; color: #7F8C8D; margin-top: 5px; }
+=======
+        .navbar-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: rgba(232, 237, 242, 0.88);
+            margin-top: 1px;
+        }
+
+        .logout-btn {
+            background: var(--primary-cream);
+            color: var(--primary-deep);
+            border: 1px solid rgba(194, 165, 109, 0.7);
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-size: 0.86rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        #supervisorPanel {
+            padding-top: 68px;
+        }
+
+        .security-card { grid-column: span 12; }
+
+        .audit-pre {
+            margin: 0;
+            padding: 0.75rem;
+            border-radius: 10px;
+            background: rgba(84, 122, 149, 0.08);
+            border: 1px solid rgba(84, 122, 149, 0.22);
+            color: rgba(44, 57, 71, 0.92);
+            font-size: 0.82rem;
+            white-space: pre-wrap;
+            line-height: 1.45;
+        }
+
+        @media (max-width: 980px) {
+            .training-card, .contribution-card, .performance-card, .security-card { grid-column: span 12; }
+            .performance-grid { grid-template-columns: 1fr; }
+            .kpi-row { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 560px) {
+            .kpi-row { grid-template-columns: 1fr; }
+            .input-text { width: 100%; }
+        }
+>>>>>>> 0b32c887abec9099fdbb81cee06dc969fa8f32a7
 
     </style>
 </head>
@@ -147,6 +201,7 @@
                 </table>
             </div>
 
+<<<<<<< HEAD
             <!-- ACTIVE NETWORK -->
             <div class="card">
                 <h2>Authorized Health Network</h2>
@@ -154,12 +209,108 @@
                     <thead><tr><th>Org ID</th><th>Name</th><th>Status</th></tr></thead>
                     <tbody id="active-list"></tbody>
                 </table>
-            </div>
-        </div>
-    </div>
+=======
+                    <div class="chart-block">
+                        <div class="chart-title">Epoch-wise Accuracy vs Loss</div>
+                        <div class="trend-chart" id="trendChart"></div>
+                        <div class="legend-row">
+                            <span class="legend-tag"><span class="dot" style="background: var(--primary-mint);"></span>Accuracy</span>
+                            <span class="legend-tag"><span class="dot" style="background: var(--primary-cool);"></span>Loss (inverted scale)</span>
+                        </div>
+                    </div>
 
+                    <div class="status-badge" id="statusLabel">Awaiting securely trained hospital payloads...</div>
+                </div>
+
+                <div class="glass-panel contribution-card">
+                    <h2 class="panel-title">Contributions</h2>
+                    <p class="panel-subtext">Hospital contribution percentages in current global weight aggregation.</p>
+                    <div id="contributionsWrap"></div>
+                </div>
+
+                <div class="glass-panel security-card">
+                    <h2 class="panel-title">Aggregation &amp; defense observability</h2>
+                    <p class="panel-subtext">Aggregator mode (FedAvg variants, robust filters), Multi-Krum / trimmed-mean audit trail, RECESS probes.</p>
+                    <div class="kpi-row">
+                        <div class="kpi">
+                            <div class="kpi-label">Aggregator</div>
+                            <div class="kpi-value" id="aggregatorModeDisp" style="font-size: 0.9rem;">—</div>
+                        </div>
+                        <div class="kpi">
+                            <div class="kpi-label">Clients dropped (last round)</div>
+                            <div class="kpi-value" id="clientsBlockedDisp">—</div>
+                        </div>
+                        <div class="kpi">
+                            <div class="kpi-label">RECESS probes</div>
+                            <div class="kpi-value" id="recessShortDisp" style="font-size: 0.82rem;">—</div>
+                        </div>
+                    </div>
+                    <div class="chart-block">
+                        <div class="chart-title">Last-round audit detail</div>
+                        <pre class="audit-pre" id="lastAuditDisp">No aggregation finished yet.</pre>
+                    </div>
+                </div>
+
+                <div class="glass-panel performance-card">
+                    <h2 class="panel-title">Performance Comparisons</h2>
+                    <p class="panel-subtext">Global model metrics benchmarked against local hospital models.</p>
+                    <div class="performance-grid">
+                        <div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:left;">Model</th>
+                                        <th>Precision</th>
+                                        <th>Recall</th>
+                                        <th>F1-Score</th>
+                                        <th>AUC</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="metricsRows"></tbody>
+                            </table>
+                        </div>
+                        <div class="roc-wrap">
+                            <h4>ROC Curve Snapshot</h4>
+                            <svg viewBox="0 0 220 190" width="100%" height="190" role="img" aria-label="ROC curves">
+                                <rect x="16" y="10" width="190" height="160" fill="none" stroke="rgba(237,247,189,0.35)" />
+                                <line x1="16" y1="170" x2="206" y2="10" stroke="rgba(237,247,189,0.45)" stroke-dasharray="4 4" />
+                                <polyline id="globalRoc" fill="none" stroke="#A8B2C1" stroke-width="3" points="16,170 42,120 70,92 108,66 148,42 206,18"/>
+                                <polyline id="localRoc" fill="none" stroke="#547A95" stroke-width="3" points="16,170 46,140 82,118 120,92 160,68 206,42"/>
+                                <text x="20" y="182" fill="#2C3947" font-size="10">FPR</text>
+                                <text x="2" y="18" fill="#2C3947" font-size="10">TPR</text>
+                            </svg>
+                            <div class="legend-row" style="margin-top: 0;">
+                                <span class="legend-tag"><span class="dot" style="background: var(--primary-mint);"></span>Global</span>
+                                <span class="legend-tag"><span class="dot" style="background: var(--primary-cool);"></span>Average Local</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
     <script>
         let adminToken = null;
+        let pollIntervalId = null;
+
+        const metricState = {
+            global: { precision: 0.94, recall: 0.93, f1: 0.935, auc: 0.972 },
+            local: [
+                { name: 'Hospital A', precision: 0.90, recall: 0.88, f1: 0.89, auc: 0.941 },
+                { name: 'Hospital B', precision: 0.92, recall: 0.89, f1: 0.905, auc: 0.951 },
+                { name: 'Hospital C', precision: 0.89, recall: 0.87, f1: 0.88, auc: 0.934 }
+            ],
+            contributions: [
+                { name: 'Hospital A', value: 38 },
+                { name: 'Hospital B', value: 34 },
+                { name: 'Hospital C', value: 28 }
+            ],
+            trend: [
+                { epoch: 1, acc: 0.81, loss: 0.61 },
+                { epoch: 2, acc: 0.84, loss: 0.56 },
+                { epoch: 3, acc: 0.86, loss: 0.52 },
+                { epoch: 4, acc: 0.88, loss: 0.48 },
+                { epoch: 5, acc: 0.90, loss: 0.44 },
+                { epoch: 6, acc: 0.91, loss: 0.41 }
+            ]
+        };
 
         async function adminLogin() {
             const username = document.getElementById('admin-user').value.toUpperCase();
@@ -184,13 +335,149 @@
                     document.getElementById('login-view').classList.add('hidden');
                     document.getElementById('admin-content').classList.remove('hidden');
                     loadData();
-                    setInterval(loadData, 3000);
+                    startPolling();
                 } else {
                     alert("Verification failed");
                 }
             } else {
                 alert(data.detail || "Login failed");
             }
+        }
+
+        function toPercent(value) {
+            return `${(value * 100).toFixed(1)}%`;
+        }
+
+        function renderContributions(list) {
+            const wrap = document.getElementById('contributionsWrap');
+            if (!wrap) return;
+            wrap.innerHTML = list.map((item) => `
+                <div class="contrib-row">
+                    <div class="contrib-head">
+                        <span>${item.name}</span>
+                        <span>${item.value.toFixed(1)}%</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width: ${item.value}%;"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTrend(trend) {
+            const trendChart = document.getElementById('trendChart');
+            if (!trendChart) return;
+            trendChart.innerHTML = trend.map((point) => {
+                const accHeight = Math.max(8, Math.round(point.acc * 100));
+                const lossInverted = Math.max(8, Math.round((1 - point.loss) * 100));
+                return `
+                    <div class="epoch-col">
+                        <div class="bar-stack">
+                            <div class="acc-bar" style="height:${accHeight}px"></div>
+                            <div class="loss-bar" style="height:${lossInverted}px"></div>
+                        </div>
+                        <div class="epoch-label">E${point.epoch}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderMetrics() {
+            const local = metricState.local;
+            const global = metricState.global;
+            const avgLocalAuc = local.reduce((acc, node) => acc + node.auc, 0) / local.length;
+
+            const rows = [
+                {
+                    name: 'Global Model',
+                    precision: global.precision,
+                    recall: global.recall,
+                    f1: global.f1,
+                    auc: global.auc
+                },
+                ...local
+            ];
+
+            const metricsRows = document.getElementById('metricsRows');
+            if (metricsRows) {
+                metricsRows.innerHTML = rows.map((row, index) => `
+                    <tr style="${index === 0 ? 'background: rgba(172, 186, 196, 0.28);' : ''}">
+                        <td class="model-name">${row.name}</td>
+                        <td>${toPercent(row.precision)}</td>
+                        <td>${toPercent(row.recall)}</td>
+                        <td>${toPercent(row.f1)}</td>
+                        <td>${(row.auc).toFixed(3)}</td>
+                    </tr>
+                `).join('');
+            }
+
+            const globalRoc = document.getElementById('globalRoc');
+            const localRoc = document.getElementById('localRoc');
+            if (globalRoc && localRoc) {
+                const globalCurve = "16,170 42,120 70,92 108,66 148,42 206,18";
+                const localCurve = avgLocalAuc > 0.945
+                    ? "16,170 46,136 82,112 120,86 160,62 206,40"
+                    : "16,170 46,144 82,120 120,96 160,72 206,46";
+                globalRoc.setAttribute('points', globalCurve);
+                localRoc.setAttribute('points', localCurve);
+            }
+        }
+
+        function renderObservability(data) {
+            const agg = document.getElementById('aggregatorModeDisp');
+            if (agg) agg.textContent = data.aggregation ?? '—';
+            const drop = document.getElementById('clientsBlockedDisp');
+            if (drop) {
+                if (typeof data.clients_blocked_krum === 'number') {
+                    drop.textContent = String(data.clients_blocked_krum);
+                } else if (data.last_audit && Array.isArray(data.last_audit.clients_dropped)) {
+                    drop.textContent = String(data.last_audit.clients_dropped.length);
+                } else {
+                    drop.textContent = '0';
+                }
+            }
+            const rs = document.getElementById('recessShortDisp');
+            if (rs && data.recess) {
+                const en = data.recess.enabled ? 'on' : 'off';
+                const rq = data.recess.required ? 'required' : 'optional';
+                rs.textContent = `${en}, ${rq}`;
+            } else if (rs) rs.textContent = '—';
+
+            const ad = document.getElementById('lastAuditDisp');
+            if (ad) {
+                if (data.last_audit) {
+                    const a = data.last_audit;
+                    const lines = [
+                        `mode: ${a.mode ?? '—'}`,
+                        `clients_in: ${a.clients_in ?? '—'}`,
+                        `krum_selected (0-based): ${(a.krum_selected || []).join(', ') || '—'}`,
+                        `clients_dropped: ${(a.clients_dropped || []).join(', ') || 'none'}`,
+                        `trim_beta_used: ${a.trim_beta_used ?? '—'}`,
+                        `neighbor_m_used: ${a.neighbor_m_used ?? '—'}`,
+                        `krum_fallback: ${a.krum_fallback || 'none'}`,
+                        `sample_weight_fractions: ${(a.sample_weights_fraction || []).join(', ') || '—'}`,
+                        `recess_required_last_round: ${a.recess_was_required_last_round ?? '—'}`,
+                    ];
+                    ad.textContent = lines.join('\n');
+                } else {
+                    ad.textContent = 'No aggregation finished yet.';
+                }
+            }
+        }
+
+        function renderDashboard() {
+            const latestPoint = metricState.trend[metricState.trend.length - 1];
+            const epochNum = document.getElementById('epochNum');
+            const globalAcc = document.getElementById('globalAcc');
+            const globalLoss = document.getElementById('globalLoss');
+            
+            if (epochNum) epochNum.innerText = latestPoint.epoch;
+            if (globalAcc) globalAcc.innerText = toPercent(latestPoint.acc);
+            if (globalLoss) globalLoss.innerText = latestPoint.loss.toFixed(3);
+            
+            renderTrend(metricState.trend);
+            renderContributions(metricState.contributions);
+            renderMetrics();
         }
 
         async function loadData() {
@@ -200,14 +487,22 @@
                     headers: {'Authorization': 'Bearer ' + adminToken}
                 });
                 const stats = await statsRes.json();
-                document.getElementById('stat-acc').innerText = (stats.accuracy * 100).toFixed(1) + "%";
-                document.getElementById('stat-round').innerText = stats.round_num;
-                document.getElementById('stat-nodes').innerText = `${stats.nodes_active}/${stats.max_nodes}`;
                 
-                const contributors = stats.contributing.length > 0 
-                    ? "In Round: " + stats.contributing.join(", ") 
-                    : "Waiting for round start...";
-                document.getElementById('contributing-nodes').innerText = contributors;
+                const statAcc = document.getElementById('stat-acc');
+                const statRound = document.getElementById('stat-round');
+                const statNodes = document.getElementById('stat-nodes');
+                const contributingNodes = document.getElementById('contributing-nodes');
+
+                if (statAcc) statAcc.innerText = (stats.accuracy * 100).toFixed(1) + "%";
+                if (statRound) statRound.innerText = stats.round_num;
+                if (statNodes) statNodes.innerText = `${stats.nodes_active}/${stats.max_nodes}`;
+                
+                if (contributingNodes) {
+                    const contributors = stats.contributing.length > 0 
+                        ? "In Round: " + stats.contributing.join(", ") 
+                        : "Waiting for round start...";
+                    contributingNodes.innerText = contributors;
+                }
 
                 const hospRes = await fetch('/api/admin/hospitals', {
                     headers: {'Authorization': 'Bearer ' + adminToken}
@@ -216,30 +511,94 @@
                 
                 const pendingBody = document.getElementById('pending-list');
                 const activeBody = document.getElementById('active-list');
-                pendingBody.innerHTML = '';
-                activeBody.innerHTML = '';
+                if (pendingBody && activeBody) {
+                    pendingBody.innerHTML = '';
+                    activeBody.innerHTML = '';
 
-                for (const [id, info] of Object.entries(hospitals)) {
-                    if (info.status === 'PENDING') {
-                        pendingBody.innerHTML += `
-                            <tr>
-                                <td><strong>${id}</strong></td>
-                                <td>${info.name}</td>
-                                <td>${info.email}</td>
-                                <td><button class="btn btn-approve" onclick="approve('${id}')">Authorize</button></td>
-                            </tr>
-                        `;
-                    } else {
-                        activeBody.innerHTML += `
-                            <tr>
-                                <td><strong>${id}</strong></td>
-                                <td>${info.name}</td>
-                                <td><span class="badge badge-active">${info.status}</span></td>
-                            </tr>
-                        `;
+                    for (const [id, info] of Object.entries(hospitals)) {
+                        if (info.status === 'PENDING') {
+                            pendingBody.innerHTML += `
+                                <tr>
+                                    <td><strong>${id}</strong></td>
+                                    <td>${info.name}</td>
+                                    <td>${info.email}</td>
+                                    <td><button class="btn btn-approve" onclick="approve('${id}')">Authorize</button></td>
+                                </tr>
+                            `;
+                        } else {
+                            activeBody.innerHTML += `
+                                <tr>
+                                    <td><strong>${id}</strong></td>
+                                    <td>${info.name}</td>
+                                    <td><span class="badge badge-active">${info.status}</span></td>
+                                </tr>
+                            `;
+                        }
                     }
                 }
             } catch (e) { console.error(e); }
+        }
+
+        function startPolling() {
+            if (pollIntervalId) clearInterval(pollIntervalId);
+            pollIntervalId = setInterval(async () => {
+                try {
+                    const res = await fetch('/api/admin_stats');
+                    const data = await res.json();
+                    
+                    const roundNum = document.getElementById('roundNum');
+                    const statusLabel = document.getElementById('statusLabel');
+                    
+                    if (roundNum) roundNum.innerText = data.round_num;
+                    const modeTag = data.aggregation ? ` [${data.aggregation}]` : '';
+
+                    if (statusLabel) {
+                        if (data.clients_received === data.max_clients) {
+                            statusLabel.innerText = `Running secure aggregation${modeTag}...`;
+                        } else if (data.clients_received > 0) {
+                            statusLabel.innerText = `Syncing (${data.clients_received}/${data.max_clients}) hospital updates${modeTag}...`;
+                        } else {
+                            statusLabel.innerText = `Awaiting securely trained hospital payloads${modeTag}...`;
+                        }
+                    }
+
+                    renderObservability(data);
+
+                    if (Array.isArray(data.training_trend) && data.training_trend.length > 0) {
+                        metricState.trend = data.training_trend.map((point, index) => ({
+                            epoch: point.epoch ?? index + 1,
+                            acc: point.acc ?? point.accuracy ?? 0,
+                            loss: point.loss ?? 0
+                        }));
+                    }
+                    if (Array.isArray(data.contributions) && data.contributions.length > 0) {
+                        metricState.contributions = data.contributions.map((item, idx) => ({
+                            name: item.name ?? `Hospital ${idx + 1}`,
+                            value: Number(item.value ?? item.percentage ?? 0)
+                        }));
+                    }
+                    if (data.global_metrics) {
+                        metricState.global = {
+                            precision: data.global_metrics.precision ?? metricState.global.precision,
+                            recall: data.global_metrics.recall ?? metricState.global.recall,
+                            f1: data.global_metrics.f1 ?? metricState.global.f1,
+                            auc: data.global_metrics.auc ?? metricState.global.auc
+                        };
+                    }
+                    if (Array.isArray(data.local_metrics) && data.local_metrics.length > 0) {
+                        metricState.local = data.local_metrics.map((item, idx) => ({
+                            name: item.name ?? `Hospital ${String.fromCharCode(65 + idx)}`,
+                            precision: item.precision ?? 0,
+                            recall: item.recall ?? 0,
+                            f1: item.f1 ?? 0,
+                            auc: item.auc ?? 0
+                        }));
+                    }
+
+                    renderDashboard();
+                    loadData();
+                } catch (e) {}
+            }, 3000);
         }
 
         async function approve(org_id) {

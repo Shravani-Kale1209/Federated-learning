@@ -48,3 +48,24 @@ BRIGHTNESS_RANGE    = (0.8, 1.2)
 SEED             = 42
 VALIDATION_SPLIT = 0.2
 MODEL_NAME       = "brain_tumor_classifier"
+
+# ─── Federated learning (aggregator + defenses) ────────────────────────────
+# Aggregator modes: weighted_fedavg | krum_trimmed_mean | trimmed_mean
+FL_AGGREGATOR = os.environ.get("FL_AGGREGATOR", "krum_trimmed_mean")
+FL_MIN_CLIENTS_FOR_KRUM = int(os.environ.get("FL_MIN_CLIENTS_FOR_KRUM", "4"))
+FL_KRUM_MULTI_K = max(1, int(os.environ.get("FL_KRUM_MULTI_K", "2")))
+_krm = os.environ.get("FL_KRUM_NEIGHBOR_M")
+FL_KRUM_NEIGHBOR_M = int(_krm) if _krm else None
+FL_TRIM_BETA = float(os.environ.get("FL_TRIM_BETA", "0.1"))
+
+FL_MAX_CLIENTS = max(2, int(os.environ.get("FL_MAX_CLIENTS", "2")))
+# Set > 0 (e.g. 0.01) to enable FedProx custom training loop on hospital nodes.
+FL_FEDPROX_MU = float(os.environ.get("FL_FEDPROX_MU", "0"))
+
+FL_RECESS_ENABLED = os.environ.get("FL_RECESS_ENABLED", "1").lower() in ("1", "true", "yes")
+FL_RECESS_REQUIRED = os.environ.get("FL_RECESS_REQUIRED", "0").lower() in ("1", "true", "yes")
+# Relaxed default: Gaussian probes are OOD vs MRI-trained weights; tighten for stronger guarantees.
+FL_RECESS_TOLERANCE = float(os.environ.get("FL_RECESS_TOLERANCE", "8.0"))
+
+# Hospital node: run RECESS challenge/response before uploading (should match server requirement)
+HOSPITAL_RECESS = os.environ.get("HOSPITAL_RECESS", "1").lower() in ("1", "true", "yes")

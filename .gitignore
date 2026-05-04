@@ -48,7 +48,6 @@ desktop.ini
 .vscode/
 .idea/
 *.swp
-
 # ── Local Database (Contains credentials) ──
 hospital_db.json
 
@@ -63,3 +62,4 @@ antigravity/
 # ── Large Data files (if not already covered) ──
 *.jsonl
 *.csv
+agent.md
