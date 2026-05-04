@@ -48,3 +48,18 @@ desktop.ini
 .vscode/
 .idea/
 *.swp
+
+# ── Local Database (Contains credentials) ──
+hospital_db.json
+
+# ── Environment & Config ──
+.env
+config_local.py
+
+# ── AI Assistant Data ──
+.gemini/
+antigravity/
+
+# ── Large Data files (if not already covered) ──
+*.jsonl
+*.csv

@@ -3,654 +3,253 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Model Admin Supervisor</title>
+    <title>Tesseract | Global Admin Dashboard</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+        
         :root {
-            --primary-deep: #2C3947;
-            --primary-cool: #547A95;
-            --primary-mint: #A8B2C1;
-            --primary-cream: #E8EDF2;
+            --hosp-bg: #F9FBF8;
+            --hosp-navy: #1B2A4E;
+            --hosp-blue: #4A90E2;
+            --hosp-white: #FFFFFF;
+            --hosp-text: #2D3436;
+            --hosp-border: #E1E8ED;
+            --hosp-green: #4A90E2; /* Blue shade for primary actions */
+            --hosp-red: #EB5757;
+            --shadow: 0 4px 20px rgba(0,0,0,0.05);
         }
 
+        * { box-sizing: border-box; }
         body {
-            font-family: 'Inter', sans-serif;
-            background: var(--primary-cream);
-            color: var(--primary-deep);
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--hosp-bg);
+            color: var(--hosp-text);
             margin: 0;
-            padding: 2rem 1rem 3rem;
+            padding: 0;
+        }
+
+        header {
+            background: var(--hosp-navy);
+            color: white;
+            padding: 1rem 2rem;
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
             align-items: center;
-        }
-
-        .header {
-            text-align: center;
-            margin-top: 1.1rem;
-            margin-bottom: 2rem;
-        }
-
-        .header h1 {
-            font-size: 2.7rem;
-            margin-bottom: 0.4rem;
-            background: var(--primary-deep);
-            background-clip: text;
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
 
         .container {
-            display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
-            width: 100%;
-            max-width: 1140px;
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
         }
 
-        .glass-panel {
-            background: #f4f7fb;
-            border: 1px solid rgba(84, 122, 149, 0.35);
-            border-radius: 18px;
-            padding: 1.4rem;
-            box-shadow: 0 12px 30px rgba(16, 8, 38, 0.38);
-            backdrop-filter: blur(12px);
-        }
-
-        .panel-title {
-            font-size: 1.15rem;
-            font-weight: 700;
-            margin-top: 0;
-            margin-bottom: 0.45rem;
-            color: var(--primary-deep);
-        }
-
-        .panel-subtext {
-            color: rgba(44, 57, 71, 0.86);
-            font-size: 0.92rem;
-            margin-bottom: 1.2rem;
-            line-height: 1.5;
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(12, 1fr);
-            gap: 1.15rem;
-        }
-
-        .training-card { grid-column: span 8; }
-        .contribution-card { grid-column: span 4; }
-        .performance-card { grid-column: span 12; }
-
-        .kpi-row {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(130px, 1fr));
-            gap: 0.9rem;
-            margin-bottom: 1rem;
-        }
-
-        .kpi {
+        .card {
+            background: var(--hosp-white);
+            border: 1px solid var(--hosp-border);
             border-radius: 12px;
-            border: 1px solid rgba(84, 122, 149, 0.34);
-            background: #ffffff;
-            padding: 0.85rem 0.9rem;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
         }
 
-        .kpi-label {
-            font-size: 0.78rem;
-            color: rgba(44, 57, 71, 0.72);
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
+        h2 { color: var(--hosp-navy); margin-top: 0; }
 
-        .kpi-value {
-            font-size: 1.15rem;
-            font-weight: 700;
-            margin-top: 0.45rem;
-            color: var(--primary-deep);
-        }
-
-        .chart-block {
-            border-radius: 12px;
-            border: 1px solid rgba(84, 122, 149, 0.34);
-            background: #ffffff;
-            padding: 0.9rem;
-        }
-
-        .chart-title {
-            font-size: 0.85rem;
-            color: rgba(44, 57, 71, 0.82);
-            margin-bottom: 0.65rem;
-        }
-
-        .trend-chart {
-            display: flex;
-            gap: 0.45rem;
-            align-items: end;
-            height: 140px;
-        }
-
-        .epoch-col {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            align-items: center;
-            min-width: 22px;
-        }
-
-        .bar-stack {
-            width: 100%;
-            display: flex;
-            gap: 3px;
-            align-items: end;
-            justify-content: center;
-            height: 110px;
-        }
-
-        .acc-bar, .loss-bar {
-            width: 46%;
-            border-radius: 6px 6px 3px 3px;
-            transition: height 0.45s ease;
-        }
-
-        .acc-bar { background: var(--primary-cool); }
-        .loss-bar { background: var(--primary-mint); }
-
-        .epoch-label {
-            font-size: 0.68rem;
-            color: rgba(44, 57, 71, 0.8);
-        }
-
-        .legend-row {
-            display: flex;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1rem;
-            margin-top: 0.5rem;
-            font-size: 0.78rem;
-            color: rgba(44, 57, 71, 0.85);
         }
 
-        .legend-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-        }
-
-        .dot {
-            width: 9px;
-            height: 9px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-
-        .contrib-row {
-            margin-bottom: 0.8rem;
-        }
-
-        .contrib-head {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.83rem;
-            margin-bottom: 0.3rem;
-            color: var(--primary-deep);
-        }
-
-        .progress-bar-bg {
-            width: 100%;
-            background: rgba(84, 122, 149, 0.14);
-            height: 10px;
+        .stat-box {
+            background: #F8FAFF;
+            padding: 1rem;
             border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid rgba(84, 122, 149, 0.28);
-        }
-
-        .progress-bar-fill {
-            height: 100%;
-            background: var(--primary-cool);
-            width: 0%;
-            transition: 0.45s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .performance-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 1rem;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            overflow: hidden;
-            border-radius: 12px;
-            border: 1px solid rgba(84, 122, 149, 0.34);
-            background: #ffffff;
-        }
-
-        th, td {
-            padding: 0.7rem;
             text-align: center;
-            font-size: 0.85rem;
-            color: var(--primary-deep);
-            border-bottom: 1px solid rgba(84, 122, 149, 0.2);
+            border: 1px solid #E9F0FF;
         }
 
-        th {
-            color: var(--primary-deep);
-            font-weight: 700;
-            background: rgba(84, 122, 149, 0.14);
-        }
+        .stat-val { font-size: 1.8rem; font-weight: 700; color: var(--hosp-navy); display: block; }
+        .stat-label { font-size: 0.8rem; color: #7F8C8D; text-transform: uppercase; }
 
-        .model-name {
-            text-align: left;
-            font-weight: 600;
-        }
-
-        .status-badge {
-            display: inline-block;
-            margin-top: 0.95rem;
-            font-size: 0.8rem;
-            color: var(--primary-deep);
-            background: rgba(194, 165, 109, 0.2);
-            border: 1px solid rgba(194, 165, 109, 0.55);
-            border-radius: 999px;
-            padding: 0.35rem 0.7rem;
-        }
-
-        .roc-wrap {
-            border-radius: 12px;
-            border: 1px solid rgba(84, 122, 149, 0.34);
-            background: #ffffff;
-            padding: 0.7rem;
-        }
-
-        .roc-wrap h4 {
-            margin: 0 0 0.5rem 0;
-            font-size: 0.85rem;
-            color: rgba(44, 57, 71, 0.86);
-        }
-
-        .input-text {
-            padding: 14px;
-            width: 75%;
-            box-sizing: border-box;
-            border-radius: 10px;
-            border: 1px solid rgba(84, 122, 149, 0.34);
-            margin-bottom: 1rem;
-            background: #ffffff;
-            color: var(--primary-deep);
-            font-size: 1rem;
-            font-family: 'Inter';
-            text-align: center;
-            outline: none;
-        }
-
-        .input-text:focus {
-            border-color: var(--primary-deep);
-            box-shadow: 0 0 10px rgba(48, 54, 79, 0.15);
-        }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th { text-align: left; padding: 12px; border-bottom: 2px solid var(--hosp-border); color: #7F8C8D; font-size: 0.9rem; }
+        td { padding: 12px; border-bottom: 1px solid var(--hosp-border); }
 
         .btn {
-            padding: 12px 36px;
-            background: var(--primary-cool);
-            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 6px;
             border: none;
-            border-radius: 10px;
             cursor: pointer;
-            font-size: 0.95rem;
-            font-weight: 700;
-            transition: transform 0.2s;
-            box-shadow: 0 4px 15px rgba(44, 57, 71, 0.18);
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .error-text {
-            color: #ff8a8a;
-            margin-top: 16px;
-            display: none;
             font-weight: 600;
+            transition: 0.2s;
         }
+        .btn-approve { background: var(--hosp-green); color: white; }
+        .btn-approve:hover { opacity: 0.9; }
 
-        .dashboard-navbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.75rem;
-            margin-bottom: 1rem;
-            padding: 0.7rem 1rem;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 999;
-            border-radius: 0;
-            background: var(--primary-deep);
-            border-bottom: 1px solid rgba(84, 122, 149, 0.45);
-            box-shadow: 0 2px 10px rgba(44, 57, 71, 0.25);
-        }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; }
+        .badge-pending { background: #FFF4E5; color: #D35400; }
+        .badge-active { background: #E8F8F5; color: #16A085; }
 
-        .navbar-title {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: rgba(232, 237, 242, 0.88);
-            margin-top: 1px;
-        }
-
-        .logout-btn {
-            background: var(--primary-cream);
-            color: var(--primary-deep);
-            border: 1px solid rgba(194, 165, 109, 0.7);
-            border-radius: 10px;
-            padding: 10px 16px;
-            font-size: 0.86rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-        }
-
-        .logout-btn:hover {
-            transform: translateY(-1px);
-        }
-
-        #supervisorPanel {
-            padding-top: 68px;
-        }
-
-        @media (max-width: 980px) {
-            .training-card, .contribution-card, .performance-card { grid-column: span 12; }
-            .performance-grid { grid-template-columns: 1fr; }
-            .kpi-row { grid-template-columns: repeat(2, 1fr); }
-        }
-
-        @media (max-width: 560px) {
-            .kpi-row { grid-template-columns: 1fr; }
-            .input-text { width: 100%; }
-        }
+        .hidden { display: none !important; }
+        .contributor-list { font-size: 0.9rem; color: #7F8C8D; margin-top: 5px; }
 
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Global Model Admin Dashboard</h1>
-        <p style="color: rgba(44, 57, 71, 0.72); letter-spacing: 1px; font-weight: 600;">FEDERATED LEARNING CONTROL CENTER</p>
-    </div>
-    
-    <div class="container">
-        <div class="glass-panel" id="loginPanel">
-            <h2 class="panel-title">Authentication Required</h2>
-            <p class="panel-subtext">Enter supervisor override key to access global model analytics.</p>
-            <input type="password" id="adminPass" class="input-text" placeholder="Enter Supervisor Password (admin)">
-            <br>
-            <button class="btn" onclick="login()">Authenticate</button>
-            <div id="loginErr" class="error-text">Invalid credentials</div>
+
+    <header>
+        <div style="font-size: 1.5rem; font-weight: 700;">TESSERACT ADMIN</div>
+        <div>
+            <span id="status-light" style="display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--hosp-green); margin-right:5px;"></span>
+            SYSTEM ONLINE
         </div>
-        
-        <div id="supervisorPanel" style="display:none;">
-            <div class="dashboard-navbar">
-                <span class="navbar-title">Admin Navigation</span>
-                <button class="logout-btn" onclick="logout()">Logout</button>
+    </header>
+
+    <div class="container">
+        <!-- LOGIN PANEL -->
+        <div id="login-view" class="card" style="max-width: 400px; margin: 4rem auto;">
+            <h2>Admin Authentication</h2>
+            <p style="font-size: 0.9rem; color: #7F8C8D;">Secure Gateway Access</p>
+            <input type="text" id="admin-user" placeholder="Admin Username (ADMIN)" style="width:100%; padding:10px; margin-bottom:1rem; border-radius:8px; border:1px solid var(--hosp-border);" value="ADMIN">
+            <button class="btn btn-approve" style="width:100%;" onclick="adminLogin()">Request OTP</button>
+        </div>
+
+        <div id="admin-content" class="hidden">
+            <!-- GLOBAL STATS -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2>Global Model Intelligence</h2>
+                    <span id="sync-status" style="font-size: 0.8rem; color: var(--hosp-green);">● LIVE UPDATING</span>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <span class="stat-label">Model Accuracy</span>
+                        <span id="stat-acc" class="stat-val">--%</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Federated Round</span>
+                        <span id="stat-round" class="stat-val">--</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Round Progress</span>
+                        <span id="stat-nodes" class="stat-val">0/2</span>
+                        <div id="contributing-nodes" class="contributor-list">Waiting for nodes...</div>
+                    </div>
+                </div>
             </div>
-            <div class="dashboard-grid">
-                <div class="glass-panel training-card">
-                    <h2 class="panel-title">Global Model Overview</h2>
-                    <p class="panel-subtext">Real-time view of training epochs, accuracy improvement, and loss reduction.</p>
 
-                    <div class="kpi-row">
-                        <div class="kpi">
-                            <div class="kpi-label">Federated Round</div>
-                            <div class="kpi-value" id="roundNum">1</div>
-                        </div>
-                        <div class="kpi">
-                            <div class="kpi-label">Current Epoch</div>
-                            <div class="kpi-value" id="epochNum">1</div>
-                        </div>
-                        <div class="kpi">
-                            <div class="kpi-label">Global Accuracy</div>
-                            <div class="kpi-value" id="globalAcc">88.2%</div>
-                        </div>
-                        <div class="kpi">
-                            <div class="kpi-label">Global Loss</div>
-                            <div class="kpi-value" id="globalLoss">0.39</div>
-                        </div>
-                    </div>
+            <!-- PENDING REQUESTS -->
+            <div class="card">
+                <h2>Pending Authorizations</h2>
+                <table>
+                    <thead><tr><th>Org ID</th><th>Name</th><th>Email</th><th>Action</th></tr></thead>
+                    <tbody id="pending-list"></tbody>
+                </table>
+            </div>
 
-                    <div class="chart-block">
-                        <div class="chart-title">Epoch-wise Accuracy vs Loss</div>
-                        <div class="trend-chart" id="trendChart"></div>
-                        <div class="legend-row">
-                            <span class="legend-tag"><span class="dot" style="background: var(--primary-mint);"></span>Accuracy</span>
-                            <span class="legend-tag"><span class="dot" style="background: var(--primary-cool);"></span>Loss (inverted scale)</span>
-                        </div>
-                    </div>
-
-                    <div class="status-badge" id="statusLabel">Awaiting securely trained hospital payloads...</div>
-                </div>
-
-                <div class="glass-panel contribution-card">
-                    <h2 class="panel-title">Contributions</h2>
-                    <p class="panel-subtext">Hospital contribution percentages in current global weight aggregation.</p>
-                    <div id="contributionsWrap"></div>
-                </div>
-
-                <div class="glass-panel performance-card">
-                    <h2 class="panel-title">Performance Comparisons</h2>
-                    <p class="panel-subtext">Global model metrics benchmarked against local hospital models.</p>
-                    <div class="performance-grid">
-                        <div>
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th style="text-align:left;">Model</th>
-                                        <th>Precision</th>
-                                        <th>Recall</th>
-                                        <th>F1-Score</th>
-                                        <th>AUC</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="metricsRows"></tbody>
-                            </table>
-                        </div>
-                        <div class="roc-wrap">
-                            <h4>ROC Curve Snapshot</h4>
-                            <svg viewBox="0 0 220 190" width="100%" height="190" role="img" aria-label="ROC curves">
-                                <rect x="16" y="10" width="190" height="160" fill="none" stroke="rgba(237,247,189,0.35)" />
-                                <line x1="16" y1="170" x2="206" y2="10" stroke="rgba(237,247,189,0.45)" stroke-dasharray="4 4" />
-                                <polyline id="globalRoc" fill="none" stroke="#A8B2C1" stroke-width="3" points="16,170 42,120 70,92 108,66 148,42 206,18"/>
-                                <polyline id="localRoc" fill="none" stroke="#547A95" stroke-width="3" points="16,170 46,140 82,118 120,92 160,68 206,42"/>
-                                <text x="20" y="182" fill="#2C3947" font-size="10">FPR</text>
-                                <text x="2" y="18" fill="#2C3947" font-size="10">TPR</text>
-                            </svg>
-                            <div class="legend-row" style="margin-top: 0;">
-                                <span class="legend-tag"><span class="dot" style="background: var(--primary-mint);"></span>Global</span>
-                                <span class="legend-tag"><span class="dot" style="background: var(--primary-cool);"></span>Average Local</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <!-- ACTIVE NETWORK -->
+            <div class="card">
+                <h2>Authorized Health Network</h2>
+                <table>
+                    <thead><tr><th>Org ID</th><th>Name</th><th>Status</th></tr></thead>
+                    <tbody id="active-list"></tbody>
+                </table>
             </div>
         </div>
     </div>
 
     <script>
-        let pollIntervalId = null;
+        let adminToken = null;
 
-        const metricState = {
-            global: { precision: 0.94, recall: 0.93, f1: 0.935, auc: 0.972 },
-            local: [
-                { name: 'Hospital A', precision: 0.90, recall: 0.88, f1: 0.89, auc: 0.941 },
-                { name: 'Hospital B', precision: 0.92, recall: 0.89, f1: 0.905, auc: 0.951 },
-                { name: 'Hospital C', precision: 0.89, recall: 0.87, f1: 0.88, auc: 0.934 }
-            ],
-            contributions: [
-                { name: 'Hospital A', value: 38 },
-                { name: 'Hospital B', value: 34 },
-                { name: 'Hospital C', value: 28 }
-            ],
-            trend: [
-                { epoch: 1, acc: 0.81, loss: 0.61 },
-                { epoch: 2, acc: 0.84, loss: 0.56 },
-                { epoch: 3, acc: 0.86, loss: 0.52 },
-                { epoch: 4, acc: 0.88, loss: 0.48 },
-                { epoch: 5, acc: 0.90, loss: 0.44 },
-                { epoch: 6, acc: 0.91, loss: 0.41 }
-            ]
-        };
-
-        function toPercent(value) {
-            return `${(value * 100).toFixed(1)}%`;
-        }
-
-        function renderContributions(list) {
-            const wrap = document.getElementById('contributionsWrap');
-            wrap.innerHTML = list.map((item) => `
-                <div class="contrib-row">
-                    <div class="contrib-head">
-                        <span>${item.name}</span>
-                        <span>${item.value.toFixed(1)}%</span>
-                    </div>
-                    <div class="progress-bar-bg">
-                        <div class="progress-bar-fill" style="width: ${item.value}%;"></div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function renderTrend(trend) {
-            const trendChart = document.getElementById('trendChart');
-            trendChart.innerHTML = trend.map((point) => {
-                const accHeight = Math.max(8, Math.round(point.acc * 100));
-                const lossInverted = Math.max(8, Math.round((1 - point.loss) * 100));
-                return `
-                    <div class="epoch-col">
-                        <div class="bar-stack">
-                            <div class="acc-bar" style="height:${accHeight}px"></div>
-                            <div class="loss-bar" style="height:${lossInverted}px"></div>
-                        </div>
-                        <div class="epoch-label">E${point.epoch}</div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function renderMetrics() {
-            const local = metricState.local;
-            const global = metricState.global;
-            const avgLocalAuc = local.reduce((acc, node) => acc + node.auc, 0) / local.length;
-
-            const rows = [
-                {
-                    name: 'Global Model',
-                    precision: global.precision,
-                    recall: global.recall,
-                    f1: global.f1,
-                    auc: global.auc
-                },
-                ...local
-            ];
-
-            document.getElementById('metricsRows').innerHTML = rows.map((row, index) => `
-                <tr style="${index === 0 ? 'background: rgba(172, 186, 196, 0.28);' : ''}">
-                    <td class="model-name">${row.name}</td>
-                    <td>${toPercent(row.precision)}</td>
-                    <td>${toPercent(row.recall)}</td>
-                    <td>${toPercent(row.f1)}</td>
-                    <td>${(row.auc).toFixed(3)}</td>
-                </tr>
-            `).join('');
-
-            const globalCurve = "16,170 42,120 70,92 108,66 148,42 206,18";
-            const localCurve = avgLocalAuc > 0.945
-                ? "16,170 46,136 82,112 120,86 160,62 206,40"
-                : "16,170 46,144 82,120 120,96 160,72 206,46";
-            document.getElementById('globalRoc').setAttribute('points', globalCurve);
-            document.getElementById('localRoc').setAttribute('points', localCurve);
-        }
-
-        function renderDashboard() {
-            const latestPoint = metricState.trend[metricState.trend.length - 1];
-            document.getElementById('epochNum').innerText = latestPoint.epoch;
-            document.getElementById('globalAcc').innerText = toPercent(latestPoint.acc);
-            document.getElementById('globalLoss').innerText = latestPoint.loss.toFixed(3);
-            renderTrend(metricState.trend);
-            renderContributions(metricState.contributions);
-            renderMetrics();
-        }
-
-        function login() {
-            if(document.getElementById('adminPass').value === "admin") {
-                document.getElementById('loginErr').style.display = "none";
-                document.getElementById('loginPanel').style.display = "none";
-                document.getElementById('supervisorPanel').style.display = "block";
-                renderDashboard();
-                startPolling();
+        async function adminLogin() {
+            const username = document.getElementById('admin-user').value.toUpperCase();
+            const res = await fetch('/api/auth/request-otp', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ username })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                const otp = prompt("DEMO MODE: Admin OTP is " + data.debug_otp + "\nEnter it here:");
+                if (!otp) return;
+                
+                const verifyRes = await fetch('/api/auth/verify-otp', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ username, otp })
+                });
+                const verifyData = await verifyRes.json();
+                if (verifyData.token) {
+                    adminToken = verifyData.token;
+                    document.getElementById('login-view').classList.add('hidden');
+                    document.getElementById('admin-content').classList.remove('hidden');
+                    loadData();
+                    setInterval(loadData, 3000);
+                } else {
+                    alert("Verification failed");
+                }
             } else {
-                document.getElementById('loginErr').style.display = "block";
+                alert(data.detail || "Login failed");
             }
         }
 
-        function logout() {
-            if (pollIntervalId) {
-                clearInterval(pollIntervalId);
-                pollIntervalId = null;
-            }
-            document.getElementById('supervisorPanel').style.display = "none";
-            document.getElementById('loginPanel').style.display = "block";
-            document.getElementById('adminPass').value = "";
-            document.getElementById('loginErr').style.display = "none";
-            document.getElementById('adminPass').focus();
-        }
-        
-        async function startPolling() {
-            if (pollIntervalId) return;
+        async function loadData() {
+            if (!adminToken) return;
+            try {
+                const statsRes = await fetch('/api/stats', {
+                    headers: {'Authorization': 'Bearer ' + adminToken}
+                });
+                const stats = await statsRes.json();
+                document.getElementById('stat-acc').innerText = (stats.accuracy * 100).toFixed(1) + "%";
+                document.getElementById('stat-round').innerText = stats.round_num;
+                document.getElementById('stat-nodes').innerText = `${stats.nodes_active}/${stats.max_nodes}`;
+                
+                const contributors = stats.contributing.length > 0 
+                    ? "In Round: " + stats.contributing.join(", ") 
+                    : "Waiting for round start...";
+                document.getElementById('contributing-nodes').innerText = contributors;
 
-            pollIntervalId = setInterval(async () => {
-                try {
-                    const res = await fetch('/api/admin_stats');
-                    const data = await res.json();
-                    document.getElementById('roundNum').innerText = data.round_num;
+                const hospRes = await fetch('/api/admin/hospitals', {
+                    headers: {'Authorization': 'Bearer ' + adminToken}
+                });
+                const hospitals = await hospRes.json();
+                
+                const pendingBody = document.getElementById('pending-list');
+                const activeBody = document.getElementById('active-list');
+                pendingBody.innerHTML = '';
+                activeBody.innerHTML = '';
 
-                    if (data.clients_received === data.max_clients) {
-                        document.getElementById('statusLabel').innerText = "Running secure FedAvg aggregation...";
-                    } else if (data.clients_received > 0) {
-                        document.getElementById('statusLabel').innerText = `Syncing (${data.clients_received}/${data.max_clients}) hospital updates...`;
+                for (const [id, info] of Object.entries(hospitals)) {
+                    if (info.status === 'PENDING') {
+                        pendingBody.innerHTML += `
+                            <tr>
+                                <td><strong>${id}</strong></td>
+                                <td>${info.name}</td>
+                                <td>${info.email}</td>
+                                <td><button class="btn btn-approve" onclick="approve('${id}')">Authorize</button></td>
+                            </tr>
+                        `;
                     } else {
-                        document.getElementById('statusLabel').innerText = "Awaiting securely trained hospital payloads...";
+                        activeBody.innerHTML += `
+                            <tr>
+                                <td><strong>${id}</strong></td>
+                                <td>${info.name}</td>
+                                <td><span class="badge badge-active">${info.status}</span></td>
+                            </tr>
+                        `;
                     }
+                }
+            } catch (e) { console.error(e); }
+        }
 
-                    if (Array.isArray(data.training_trend) && data.training_trend.length > 0) {
-                        metricState.trend = data.training_trend.map((point, index) => ({
-                            epoch: point.epoch ?? index + 1,
-                            acc: point.acc ?? point.accuracy ?? 0,
-                            loss: point.loss ?? 0
-                        }));
-                    }
-                    if (Array.isArray(data.contributions) && data.contributions.length > 0) {
-                        metricState.contributions = data.contributions.map((item, idx) => ({
-                            name: item.name ?? `Hospital ${idx + 1}`,
-                            value: Number(item.value ?? item.percentage ?? 0)
-                        }));
-                    }
-                    if (data.global_metrics) {
-                        metricState.global = {
-                            precision: data.global_metrics.precision ?? metricState.global.precision,
-                            recall: data.global_metrics.recall ?? metricState.global.recall,
-                            f1: data.global_metrics.f1 ?? metricState.global.f1,
-                            auc: data.global_metrics.auc ?? metricState.global.auc
-                        };
-                    }
-                    if (Array.isArray(data.local_metrics) && data.local_metrics.length > 0) {
-                        metricState.local = data.local_metrics.map((item, idx) => ({
-                            name: item.name ?? `Hospital ${String.fromCharCode(65 + idx)}`,
-                            precision: item.precision ?? 0,
-                            recall: item.recall ?? 0,
-                            f1: item.f1 ?? 0,
-                            auc: item.auc ?? 0
-                        }));
-                    }
-
-                    renderDashboard();
-                } catch (e) {}
-            }, 2000);
+        async function approve(org_id) {
+            const res = await fetch(`/api/admin/approve-hospital/${org_id}`, { 
+                method: 'POST',
+                headers: {'Authorization': 'Bearer ' + adminToken}
+            });
+            if (res.ok) {
+                loadData();
+            }
         }
     </script>
 </body>

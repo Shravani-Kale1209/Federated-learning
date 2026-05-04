@@ -18,6 +18,7 @@ import requests
 import numpy as np
 from fastapi import FastAPI, UploadFile, File, BackgroundTasks
 from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import tensorflow as tf
 
@@ -27,8 +28,42 @@ from backend.load_compat import load_model_compat
 from backend.predict import preprocess
 
 app = FastAPI(title="Local Hospital Node")
-hospital_state = {"name": "Hospital X", "status": "Idle", "model": None}
+
+# --- CORS MIDDLEWARE ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+hospital_state = {
+    "name": "Hospital X", 
+    "org_id": "UNKNOWN",
+    "password": "node_password",
+    "status": "Idle", 
+    "model": None,
+    "token": None
+}
 ADMIN_URL = "http://127.0.0.1:8000"
+
+def get_auth_token():
+    """Authenticates with the Admin server to get a JWT token."""
+    try:
+        res = requests.post(f"{ADMIN_URL}/api/auth/login", json={
+            "username": hospital_state["org_id"],
+            "password": hospital_state["password"]
+        })
+        if res.status_code == 200:
+            hospital_state["token"] = res.json().get("token")
+            print(f"Authenticated successfully as {hospital_state['org_id']}")
+            return True
+        else:
+            print(f"Authentication failed: {res.text}")
+    except Exception as e:
+        print(f"Error connecting to admin for auth: {e}")
+    return False
 
 @app.on_event("startup")
 def startup_event():
@@ -38,14 +73,17 @@ def startup_event():
         model.compile(optimizer=tf.keras.optimizers.Adam(1e-5), loss="sparse_categorical_crossentropy", metrics=["accuracy"])
         hospital_state["model"] = model
         
-        try:
-            res = requests.get(f"{ADMIN_URL}/weights")
-            if res.status_code == 200:
-                global_weights = pickle.loads(res.content)
-                model.set_weights(global_weights)
-                print("Synchronized global weights on boot.")
-        except Exception:
-            print("Admin server invisible on boot. Using local checkpoint baseline.")
+        # Initial sync
+        if get_auth_token():
+            try:
+                headers = {"Authorization": f"Bearer {hospital_state['token']}"}
+                res = requests.get(f"{ADMIN_URL}/weights", headers=headers)
+                if res.status_code == 200:
+                    global_weights = pickle.loads(res.content)
+                    model.set_weights(global_weights)
+                    print("Synchronized global weights on boot.")
+            except Exception as e:
+                print(f"Sync failed: {e}")
     else:
         print("CRITICAL: Base model not found in checkpoints/")
 
@@ -81,7 +119,11 @@ def run_local_training(zip_path: str):
             return
             
         try:
-            res = requests.get(f"{ADMIN_URL}/weights")
+            if not hospital_state["token"]:
+                get_auth_token()
+            
+            headers = {"Authorization": f"Bearer {hospital_state['token']}"}
+            res = requests.get(f"{ADMIN_URL}/weights", headers=headers)
             res.raise_for_status()
             global_weights = pickle.loads(res.content)
             model.set_weights(global_weights)
@@ -92,12 +134,11 @@ def run_local_training(zip_path: str):
         hospital_state["status"] = "Training locally on patient data..."
         
         # 3. Create a Local tf.data Pipeline from the extracted folder
-        # Expecting zip to have folders for classes inside, or just images
         local_ds = tf.keras.utils.image_dataset_from_directory(
             temp_dir,
             image_size=IMG_SIZE,
             batch_size=BATCH_SIZE,
-            label_mode='int' # Simplistic matching for demo
+            label_mode='int'
         )
         
         # Train!
@@ -110,10 +151,25 @@ def run_local_training(zip_path: str):
         payload = pickle.dumps(new_weights)
         
         try:
-            requests.post(f"{ADMIN_URL}/weights", data=payload)
+            if not hospital_state["token"]:
+                get_auth_token()
+            
+            headers = {"Authorization": f"Bearer {hospital_state['token']}"}
+            res = requests.post(f"{ADMIN_URL}/weights", data=payload, headers=headers)
+            
+            if res.status_code == 401:
+                # Token might be stale, retry once
+                print("Token invalid, retrying authentication...")
+                if get_auth_token():
+                    headers = {"Authorization": f"Bearer {hospital_state['token']}"}
+                    res = requests.post(f"{ADMIN_URL}/weights", data=payload, headers=headers)
+            
+            res.raise_for_status()
             hospital_state["status"] = "Federated Cycle Complete! Patient data erased."
         except Exception as e:
-            hospital_state["status"] = "Upload failed."
+            print(f"Upload failed: {e}")
+            error_detail = getattr(res, 'text', str(e)) if 'res' in locals() else str(e)
+            hospital_state["status"] = f"Upload failed: {error_detail}"
             
     finally:
         # 5. Clean up patient datasets (HIPPA compliance simulation)
@@ -167,7 +223,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, required=True)
     parser.add_argument("--name", type=str, required=True)
+    parser.add_argument("--org_id", type=str, required=True)
+    parser.add_argument("--password", type=str, default="node_password")
     args = parser.parse_args()
     
     hospital_state["name"] = args.name
+    hospital_state["org_id"] = args.org_id
+    hospital_state["password"] = args.password
+    
     uvicorn.run(app, host="127.0.0.1", port=args.port)
