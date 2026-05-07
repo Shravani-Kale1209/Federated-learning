@@ -53,6 +53,8 @@ def unflatten_to_weight_list(vec: np.ndarray, shapes: list[Tuple[int, ...]]) -> 
     return layers
 
 
+# ALGORITHM: Federated Averaging (FedAvg)
+# DESCRIPTION: A standard federated learning algorithm that computes a weighted average of the local models based on their dataset sizes.
 def weighted_fedavg(
     updates: Sequence[Tuple[Sequence[np.ndarray], float]],
 ) -> list[np.ndarray]:
@@ -90,6 +92,8 @@ def _pairwise_sq_distances(points: np.ndarray) -> np.ndarray:
     return d
 
 
+# ALGORITHM: Multi-Krum (Byzantine-Robust Aggregation)
+# DESCRIPTION: An algorithm that selects a subset of local models (multi-k) that have the smallest sum of squared distances to their closest neighbors, effectively filtering out malicious or poisoned updates.
 def multi_krum_indices(
     flat_updates: np.ndarray,
     *,
@@ -120,6 +124,8 @@ def multi_krum_indices(
     return ranked[:k_pick]
 
 
+# ALGORITHM: Coordinate-wise Trimmed Mean
+# DESCRIPTION: A robust aggregation technique that sorts the parameter values for each coordinate, drops a specified fraction of the highest and lowest values (outliers), and computes the mean of the remaining values.
 def coordinate_trimmed_mean(
     points: np.ndarray,
     beta_per_tail: float,
@@ -144,12 +150,13 @@ def coordinate_trimmed_mean(
     if trim * 2 >= n_clients:
         return np.median(x, axis=0)
 
-    out = np.empty(dim, dtype=np.float64)
-    for j in range(dim):
-        col = np.sort(x[:, j])
-        col = col[trim : len(col) - trim]
-        out[j] = float(np.mean(col)) if len(col) else float(np.median(x[:, j]))
-    return out
+    sorted_x = np.sort(x, axis=0)
+    trimmed_x = sorted_x[trim : n_clients - trim, :]
+    
+    if trimmed_x.shape[0] > 0:
+        return np.mean(trimmed_x, axis=0)
+    else:
+        return np.median(x, axis=0)
 
 
 def aggregate_updates(

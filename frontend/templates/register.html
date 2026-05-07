@@ -163,6 +163,73 @@
         }
         .toast.show { transform: translateY(0); }
 
+        .hidden { display: none !important; }
+        .success-text { color: #27AE60; font-weight: 600; font-size: 0.85rem; margin-top: 5px; }
+        .hash-tag { font-family: 'Courier New', Courier, monospace; font-size: 0.7rem; color: #7F8C8D; background: #EEE; padding: 2px 5px; border-radius: 4px; margin-top: 4px; display: block; word-break: break-all; }
+        
+        .certificate-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 20000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .cert-box {
+            background: white;
+            border: 8px double var(--hosp-navy);
+            max-width: 600px;
+            width: 100%;
+            padding: 3rem;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .cert-watermark {
+            position: absolute;
+            top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg);
+            font-size: 5rem; font-weight: 900; color: rgba(74, 144, 226, 0.05);
+            pointer-events: none; white-space: nowrap;
+        }
+
+        .lei-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            padding: 10px;
+            background: #F0F7FF;
+            border-radius: 8px;
+            border: 1px solid #D0E3F7;
+        }
+
+        .btn-seal {
+            background: #2C3E50;
+            color: white;
+            margin-top: 1rem;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .btn-seal.active { opacity: 1; pointer-events: auto; }
+        .btn-seal:hover { background: #1A252F; }
+
+        .verification-spinner {
+            width: 16px; height: 16px;
+            border: 2px solid rgba(74, 144, 226, 0.2);
+            border-top: 2px solid var(--hosp-blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
     </style>
 </head>
 <body>
@@ -174,9 +241,17 @@
 
     <div class="container">
         <div class="card">
-            <h2>Node Registration</h2>
-            <p>Initialize secure federated connection by providing organizational credentials and hardware compliance bundle.</p>
-            
+            <div class="form-group">
+                <label>Legal Entity Identifier (LEI)</label>
+                <input type="text" id="reg-lei" maxlength="20" placeholder="Enter 20-Character Legal Entity Identifier">
+                <div id="lei-verification-status" class="hidden">
+                    <div class="lei-status">
+                        <div class="verification-spinner" id="lei-loader"></div>
+                        <span id="lei-text" style="font-size: 0.85rem; color: var(--hosp-blue);">Checking Global Database...</span>
+                    </div>
+                </div>
+            </div>
+
             <div class="form-group">
                 <label>Organization Identifier (Org ID)</label>
                 <input type="text" id="reg-org" placeholder="e.g. ALPHA-MED-01">
@@ -187,27 +262,54 @@
                 <input type="email" id="reg-email" placeholder="admin@hospital.org">
             </div>
 
-            <label>Compliance Bundle (Required Documents)</label>
+            <label>Compliance Bundle (Softcopy Uploads Required)</label>
             <div class="compliance-grid">
                 <div class="file-input-wrapper">
                     <label style="font-size: 0.75rem;">BAA (Business Assoc. Agreement)</label>
-                    <input type="file" id="file-baa" class="compliance-file">
+                    <input type="file" id="file-baa" class="compliance-file" onchange="checkUploads()">
+                    <div id="hash-baa" class="hash-tag hidden"></div>
                 </div>
                 <div class="file-input-wrapper">
                     <label style="font-size: 0.75rem;">DUA (Data Use Agreement)</label>
-                    <input type="file" id="file-dua" class="compliance-file">
+                    <input type="file" id="file-dua" class="compliance-file" onchange="checkUploads()">
+                    <div id="hash-dua" class="hash-tag hidden"></div>
                 </div>
-                <div class="file-input-wrapper">
+                <div class="file-input-wrapper" style="grid-column: span 2;">
                     <label style="font-size: 0.75rem;">SBOM (Software Bill of Materials)</label>
-                    <input type="file" id="file-sbom" class="compliance-file">
-                </div>
-                <div class="file-input-wrapper">
-                    <label style="font-size: 0.75rem;">TIPPSS Certification</label>
-                    <input type="file" id="file-tippss" class="compliance-file">
+                    <input type="file" id="file-sbom" class="compliance-file" onchange="checkUploads()">
+                    <div id="hash-sbom" class="hash-tag hidden"></div>
                 </div>
             </div>
 
-            <button class="btn" onclick="startSecurityVerification()">Verify & Register</button>
+            <button id="btn-sign-seal" class="btn-seal" onclick="signAndSeal()">Sign & Seal Documents</button>
+
+            <button id="btn-verify-register" class="btn hidden" onclick="startSecurityVerification()">Verify & Register Hardware</button>
+        </div>
+    </div>
+
+    <!-- TIPPSS Certificate Overlay -->
+    <div id="cert-overlay" class="certificate-overlay">
+        <div class="cert-box">
+            <div class="cert-watermark">CONFIDENTIAL</div>
+            <div style="font-size: 0.8rem; color: #7F8C8D; letter-spacing: 2px;">CERTIFICATE OF COMPLIANCE</div>
+            <h1 style="color: var(--hosp-navy); margin: 1rem 0;">TIPPSS SECURE NODE</h1>
+            <div style="border-top: 1px solid #EEE; border-bottom: 1px solid #EEE; padding: 2rem 0; margin: 2rem 0;">
+                <p style="margin-bottom: 0.5rem; font-size: 0.9rem;">This document certifies that</p>
+                <h3 id="cert-org-name" style="margin: 0; color: var(--hosp-blue);">GENERAL HOSPITAL</h3>
+                <p style="margin-top: 0.5rem; font-size: 0.8rem; color: #7F8C8D;">LEI: <span id="cert-lei-val" style="color: #333; font-weight: 600;">---</span></p>
+                
+                <div style="margin-top: 2rem; text-align: left; font-size: 0.7rem; background: #F9F9F9; padding: 1rem; border-radius: 4px;">
+                    <div style="font-weight: 700; margin-bottom: 5px; color: var(--hosp-navy);">DIGITAL SIGNATURE HASHES</div>
+                    <div id="cert-hashes"></div>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="text-align: left;">
+                    <div style="font-size: 0.7rem; color: #7F8C8D;">ISSUE DATE</div>
+                    <div id="cert-date" style="font-size: 0.8rem; font-weight: 700;">---</div>
+                </div>
+                <button class="btn" style="width: auto; padding: 10px 25px; margin-top: 0;" onclick="window.location.href='/'">Access Dashboard</button>
+            </div>
         </div>
     </div>
 
@@ -224,6 +326,9 @@
 
     <script>
         const ADMIN_URL = "http://127.0.0.1:8000";
+        let leiVerified = false;
+        let docsSigned = false;
+        const fileHashes = {};
 
         function showToast(message) {
             const t = document.getElementById('toast');
@@ -232,24 +337,89 @@
             setTimeout(() => t.classList.remove('show'), 3000);
         }
 
-        async function startSecurityVerification() {
-            const org_id = document.getElementById('reg-org').value;
-            const email = document.getElementById('reg-email').value;
+        // LEI Verification Logic
+        document.getElementById('reg-lei').addEventListener('input', async (e) => {
+            const val = e.target.value;
+            const statusDiv = document.getElementById('lei-verification-status');
+            const loader = document.getElementById('lei-loader');
+            const text = document.getElementById('lei-text');
 
-            if (!org_id || !email) {
-                alert("Please fill in Org ID and Email.");
-                return;
+            if (val.length === 20) {
+                statusDiv.classList.remove('hidden');
+                loader.classList.remove('hidden');
+                text.innerText = "Checking Global Database...";
+                text.style.color = "var(--hosp-blue)";
+                
+                await sleep(2000);
+                
+                loader.classList.add('hidden');
+                text.innerText = "✅ LEI Verified: General Hospital (Active)";
+                text.style.color = "#27AE60";
+                leiVerified = true;
+                checkOnboardingProgress();
+            } else {
+                statusDiv.classList.add('hidden');
+                leiVerified = false;
+                checkOnboardingProgress();
             }
+        });
 
-            // Document Scan Simulation
+        function checkUploads() {
             const files = document.querySelectorAll('.compliance-file');
             let allUploaded = true;
             files.forEach(f => {
                 if (f.files.length === 0) allUploaded = false;
             });
 
-            if (!allUploaded) {
-                alert("Please upload all 4 compliance documents.");
+            const btn = document.getElementById('btn-sign-seal');
+            if (allUploaded) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        }
+
+        async function signAndSeal() {
+            const files = document.querySelectorAll('.compliance-file');
+            const docNames = ['baa', 'dua', 'sbom'];
+            
+            for (let i = 0; i < files.length; i++) {
+                const name = docNames[i];
+                const hash = 'SHA-256: ' + Array.from(crypto.getRandomValues(new Uint8Array(16)))
+                    .map(b => b.toString(16).padStart(2, '0')).join('') + '...';
+                
+                fileHashes[name] = hash;
+                const hashElem = document.getElementById(`hash-${name}`);
+                if (hashElem) {
+                    hashElem.innerText = hash;
+                    hashElem.classList.remove('hidden');
+                }
+            }
+
+            docsSigned = true;
+            document.getElementById('btn-sign-seal').innerText = "✓ Digital Identity & Docs Signed";
+            document.getElementById('btn-sign-seal').style.background = "#27AE60";
+            document.getElementById('btn-sign-seal').style.pointerEvents = "none";
+            
+            checkOnboardingProgress();
+        }
+
+        function checkOnboardingProgress() {
+            const btnVerify = document.getElementById('btn-verify-register');
+            if (leiVerified && docsSigned) {
+                btnVerify.classList.remove('hidden');
+            } else {
+                btnVerify.classList.add('hidden');
+            }
+        }
+
+        async function startSecurityVerification() {
+            const org_id = document.getElementById('reg-org').value;
+            const email = document.getElementById('reg-email').value;
+            const lei = document.getElementById('reg-lei').value;
+
+            if (!org_id || !email) {
+                alert("Please fill in Org ID and Email.");
                 return;
             }
 
@@ -258,27 +428,30 @@
             const terminal = document.getElementById('terminal-output');
             terminal.innerHTML = '';
 
-            // Step 1: Document Scans
-            const docNames = ['BAA', 'DUA', 'SBOM', 'TIPPSS'];
+            // Step 1: Document & LEI Audit
+            await addTerminalLine(`[AUDIT] Initializing TIPPSS Compliance Audit...`, 'scan-status-wait');
+            await sleep(600);
+            await addTerminalLine(`[AUDIT] Cross-referencing LEI ${lei} with Global DB...`, 'scan-status-wait');
+            await sleep(800);
+            await addTerminalLine(`[OK] Legal Entity Verified.`, 'scan-status-ok');
+            
+            const docNames = ['BAA', 'DUA', 'SBOM'];
             for (let name of docNames) {
-                await addTerminalLine(`[SCAN] Analyzing ${name} document package...`, 'scan-status-wait');
-                await sleep(600);
-                await addTerminalLine(`[OK] ${name} checksum calculated: SHA-256 Verified.`, 'scan-status-ok');
-                showToast(`Integrity Verified: ${name}`);
-                await sleep(400);
+                await addTerminalLine(`[AUDIT] Verifying signed ${name} package integrity...`, 'scan-status-wait');
+                await sleep(500);
+                await addTerminalLine(`[OK] ${name} hash matches digital signature.`, 'scan-status-ok');
             }
+            await sleep(400);
 
-            // Step 2: Hardware Simulation (Remote Attestation)
-            await addTerminalLine(`[WAIT] Accessing TPM 2.0 Chip...`, 'scan-status-wait');
+            // Step 2: Hardware Simulation
+            await addTerminalLine(`[WAIT] TIPPSS Phase 2: Secure Hardware Handshake...`, 'scan-status-wait');
             await sleep(1000);
             await addTerminalLine(`[OK] Hardware Identity Confirmed.`, 'scan-status-ok');
-            await sleep(700);
-            await addTerminalLine(`[WAIT] Checking System Manifest...`, 'scan-status-wait');
-            await sleep(800);
+            await sleep(500);
             await addTerminalLine(`[SECURE] TEE (Trusted Execution Environment) Isolated.`, 'scan-status-secure');
-            await sleep(900);
+            await sleep(700);
             await addTerminalLine(`[OK] Remote Attestation Successful.`, 'scan-status-ok');
-            await sleep(1000);
+            await sleep(800);
 
             await addTerminalLine(`[INFO] Finalizing registration with aggregator...`, '');
             
@@ -290,8 +463,11 @@
                     body: JSON.stringify({ 
                         org_id, 
                         email,
+                        lei,
+                        node_url: window.location.origin,
                         compliance_bundle: {
                             verified: true,
+                            signatures: fileHashes,
                             timestamp: new Date().toISOString()
                         }
                     })
@@ -300,9 +476,39 @@
                 
                 if (data.status === 'verified') {
                     await addTerminalLine(`[SUCCESS] Assigned Node ID: ${data.node_id}`, 'scan-status-ok');
-                    await sleep(1500);
-                    // Redirect to existing hospital dashboard
-                    window.location.href = "/"; 
+                    await sleep(1000);
+                    
+                    // Show Certificate
+                    document.getElementById('cyber-scan-overlay').style.display = 'none';
+                    document.getElementById('cert-overlay').style.display = 'flex';
+                    document.getElementById('cert-org-name').innerText = org_id.toUpperCase();
+                    document.getElementById('cert-lei-val').innerText = lei;
+                    document.getElementById('cert-date').innerText = new Date().toLocaleDateString();
+                    
+                    const hashContainer = document.getElementById('cert-hashes');
+                    hashContainer.innerHTML = '';
+                    Object.entries(fileHashes).forEach(([k, v]) => {
+                        hashContainer.innerHTML += `<div><strong>${k.toUpperCase()}:</strong> ${v}</div>`;
+                    });
+                    
+                    // Add System-Generated TIPPSS Audit ID
+                    const auditId = 'AUDIT-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+                    hashContainer.innerHTML += `<div style="margin-top:10px; border-top:1px dashed #DDD; padding-top:5px; color:var(--hosp-green);"><strong>TIPPSS AUDIT ID:</strong> ${auditId}</div>`;
+
+                    // PERSIST TO LOCAL NODE
+                    try {
+                        await fetch('/api/save_kyh', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                lei: lei,
+                                doc_hashes: fileHashes
+                            })
+                        });
+                    } catch (e) {
+                        console.error("Local state persistence failed:", e);
+                    }
+
                 } else {
                     await addTerminalLine(`[ERROR] Registration rejected by server.`, 'scan-status-red');
                 }

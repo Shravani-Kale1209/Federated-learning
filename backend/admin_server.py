@@ -48,7 +48,8 @@ class JsonDB:
     def load():
         if not os.path.exists(DB_FILE):
             initial_data = {
-                "ADMIN": {"name": "System Admin", "status": "ACTIVE", "role": "ADMIN"}
+                "ADMIN": {"name": "System Admin", "status": "ACTIVE", "role": "ADMIN"},
+                "_meta": {"round_num": 1}
             }
             JsonDB.save(initial_data)
             return initial_data
@@ -56,12 +57,25 @@ class JsonDB:
             try:
                 return json.load(f)
             except json.JSONDecodeError:
-                return {"ADMIN": {"name": "System Admin", "status": "ACTIVE", "role": "ADMIN"}}
+                return {"ADMIN": {"name": "System Admin", "status": "ACTIVE", "role": "ADMIN"}, "_meta": {"round_num": 1}}
 
     @staticmethod
     def save(data):
         with open(DB_FILE, "w") as f:
             json.dump(data, f, indent=4)
+
+    @staticmethod
+    def get_round_num() -> int:
+        db = JsonDB.load()
+        return db.get("_meta", {}).get("round_num", 1)
+
+    @staticmethod
+    def save_round_num(round_num: int):
+        db = JsonDB.load()
+        if "_meta" not in db:
+            db["_meta"] = {}
+        db["_meta"]["round_num"] = round_num
+        JsonDB.save(db)
 
 # --- SECURITY CONFIG ---
 JWT_SECRET = "TESSERACT_ULTRA_SECRET_2026"
@@ -85,10 +99,10 @@ class AdminServerState:
         self.model = None
         self.global_weights = None
         self.client_updates = []
-        self.contributing_nodes = [] # Tracks nodes for the current round
-        self.round_num = 1
+        self.contributing_nodes = []  # Tracks nodes for the current round
+        self.round_num = JsonDB.get_round_num()  # Persisted – survives restarts
         self.MAX_CLIENTS = FL_MAX_CLIENTS
-        self.otp_store = {} # {username: {"otp": code, "expiry": time}}
+        self.otp_store = {}  # {username: {"otp": code, "expiry": time}}
         self.last_agg_num_samples = None
         self.last_audit: dict = {}
         self.pending_recess: dict[str, np.ndarray] = {}
@@ -255,7 +269,8 @@ async def login(data: dict):
 @app.get("/api/admin/hospitals", dependencies=[Depends(verify_role("ADMIN"))])
 def list_hospitals():
     db = JsonDB.load()
-    return {k: v for k, v in db.items() if k != "ADMIN"}
+    # Exclude internal system keys: ADMIN and _meta
+    return {k: v for k, v in db.items() if k not in ("ADMIN", "_meta")}
 
 @app.post("/api/admin/approve-hospital/{org_id}", dependencies=[Depends(verify_role("ADMIN"))])
 def approve_hospital(org_id: str):
@@ -353,6 +368,8 @@ def get_weights(user: dict = Depends(get_current_user)):
 
 @app.get("/verification/challenge")
 def verification_challenge():
+    # ALGORITHM: RECESS (Robust Enclave for Computation with Encrypted Secret Sharing) Probe / Model Verification
+    # DESCRIPTION: A security algorithm that issues a cryptographically secure random probe input and a token. Hospitals must respond with the exact probability distribution their model yields, preventing adversarial model replacements.
     """RECESS-style: issue probe input + token; hospitals respond with probs from their model."""
     if not FL_RECESS_ENABLED or state.model is None:
         raise HTTPException(status_code=404, detail="RECESS verification disabled")
@@ -486,6 +503,7 @@ def aggregate_and_update():
     state.client_updates = []
     state.contributing_nodes = []
     state.round_num += 1
+    JsonDB.save_round_num(state.round_num)  # Persist round so dashboard survives restarts
 
     pct = ", ".join(f"{100.0 * n / total_n:.1f}%" for n in num_samples_list)
     print(f"[ROUND {state.round_num - 1}] Global model updated (sample fractions: {pct}).")

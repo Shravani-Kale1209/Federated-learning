@@ -519,46 +519,82 @@
                 const hospRes = await fetch('/api/admin/hospitals', {
                     headers: { 'Authorization': 'Bearer ' + adminToken }
                 });
+                
+                if (!hospRes.ok) {
+                    if (hospRes.status === 401 || hospRes.status === 403) return logout();
+                    console.error("Failed to fetch hospitals:", hospRes.status);
+                    return;
+                }
+                
                 const hospitals = await hospRes.json();
+                
+                // Guard against API error responses
+                if (!hospitals || hospitals.detail) {
+                    console.error("API Error:", hospitals?.detail);
+                    return;
+                }
 
                 const pendingBody = document.getElementById('pending-list');
+                const nodeHealthBody = document.getElementById('node-health-list');
                 const activeBody = document.getElementById('active-list');
                 
                 pendingBody.innerHTML = '';
+                if(nodeHealthBody) nodeHealthBody.innerHTML = '';
                 activeBody.innerHTML = '';
 
                 let pendingCount = 0;
                 let activeCount = 0;
 
                 for (const [id, info] of Object.entries(hospitals)) {
+                    // Skip any non-hospital entries that slipped through
+                    if (!info || typeof info !== 'object' || !info.status) continue;
+                    
                     if (info.status === 'PENDING') {
                         pendingCount++;
                         pendingBody.innerHTML += `
                             <tr>
                                 <td>
                                     <div style="font-weight:700;">${id}</div>
-                                    <div style="font-size:0.8rem; color:#7F8C8D;">${info.name}</div>
+                                    <div style="font-size:0.8rem; color:#7F8C8D;">${info.name || id}</div>
                                 </td>
                                 <td><span class="badge badge-pending">PENDING</span></td>
                                 <td><button class="btn btn-success" style="padding: 6px 12px; font-size: 0.8rem;" onclick="approve('${id}')">AUTHORIZE</button></td>
                             </tr>
                         `;
-                    } else {
+                    } else if (info.status === 'ACTIVE') {
                         activeCount++;
+
+                        // Node Health row
+                        if (nodeHealthBody) {
+                            const latency = info.latency ?? 0;
+                            nodeHealthBody.innerHTML += `
+                                <tr>
+                                    <td><strong>${id}</strong></td>
+                                    <td>${info.name || id}</td>
+                                    <td><span class="health-indicator health-active"></span>ACTIVE</td>
+                                    <td><span style="color: ${latency > 80 ? '#EB5757' : '#2ECC71'}">${latency}ms</span></td>
+                                    <td>${info.uptime || '99.9%'}</td>
+                                </tr>
+                            `;
+                        }
+
                         activeBody.innerHTML += `
                             <tr>
                                 <td><strong>${id}</strong></td>
-                                <td>${info.name}</td>
-                                <td><span class="badge badge-active">${info.status}</span></td>
+                                <td>${info.name || id}</td>
+                                <td><span class="badge badge-active">ACTIVE</span></td>
                             </tr>
                         `;
                     }
                 }
                 
                 if(pendingCount === 0) pendingBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999; padding:2rem;">No pending authorizations</td></tr>';
-                if(activeCount === 0) activeBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999; padding:2rem;">No active nodes</td></tr>';
+                if(activeCount === 0) {
+                    activeBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999; padding:2rem;">No active nodes</td></tr>';
+                    if(nodeHealthBody) nodeHealthBody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#999; padding:3rem;">No active nodes detected</td></tr>';
+                }
 
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error('loadData error:', e); }
         }
 
         function startPolling() {
